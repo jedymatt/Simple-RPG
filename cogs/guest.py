@@ -1,5 +1,5 @@
 from discord.ext import commands
-import models as model
+from models import Character, User
 from util import rng
 
 
@@ -7,15 +7,17 @@ class Guest(commands.Cog):
 
     def __init__(self, client: commands.Bot):
         self.client = client
+        self.users = {}
 
     @commands.command()
-    async def start(self, ctx: commands.Context):
+    async def register(self, ctx: commands.Context):
         """
         display instructions and welcoming message for the guest
 
         :param ctx:
         """
-        pass
+        self.users[ctx.author.id] = User(discord_id=ctx.author.id)
+        await ctx.send('{} is now registered'.format(ctx.author))
 
     @commands.command()
     async def roll(self, ctx: commands.Context):
@@ -24,7 +26,10 @@ class Guest(commands.Cog):
 
         :param ctx: context
         """
-        pass
+        roll_result = rng.die()
+        self.users[ctx.author.id].init_roll = roll_result
+        print(self.users[ctx.author.id])
+        await ctx.send(roll_result)
 
     @commands.command()
     async def confirm(self, ctx: commands.Context):

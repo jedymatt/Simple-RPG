@@ -19,22 +19,22 @@ Base = declarative_base()
 character_attribute = Table(
     'character_attributes',
     Base.metadata,
-    Column('character_id', ForeignKey('characters.id')),
-    Column('attribute_id', ForeignKey('attributes.id'))
+    Column('character_id', ForeignKey('characters.id'), primary_key=True),
+    Column('attribute_id', ForeignKey('attributes.id'), primary_key=True)
 )
 
 character_location = Table(
     'character_locations',
     Base.metadata,
-    Column('character_id', ForeignKey('characters.id')),
-    Column('location_id', ForeignKey('locations.id'))
+    Column('character_id', ForeignKey('characters.id'), primary_key=True),
+    Column('location_id', ForeignKey('locations.id'), primary_key=True)
 )
 
 item_attribute = Table(
     'item_attributes',
     Base.metadata,
-    Column('item_id', ForeignKey('items.id')),
-    Column('attribute_id', ForeignKey('attributes.id'))
+    Column('item_id', ForeignKey('items.id'), primary_key=True),
+    Column('attribute_id', ForeignKey('attributes.id'), primary_key=True)
 )
 
 entity_attribute = Table(
@@ -64,7 +64,7 @@ class User(Base):
     _id = Column('id', Integer, primary_key=True)
     discord_id = Column(BigInteger, unique=True)
     init_roll = Column(Integer)
-    last_online = Column(DateTime, default=func.now(), onupdate=func.now())
+    _last_online = Column('last_online', DateTime, default=func.now(), onupdate=func.now())
 
     character = relationship('Character', back_populates='user', uselist=False)
 
@@ -94,13 +94,14 @@ class Character(Base):
     __tablename__ = 'characters'
 
     _id = Column('id', Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey('users.id'))
+    _user_id = Column('user_id', Integer, ForeignKey('users.id'))
     level = Column(Integer)
     exp = Column(Integer)
-    _current_hp = Column('current_hp', Integer)  # current hp
+    _current_hp = Column('current_hp', Integer)
     money = Column(Integer)
     _hp_last_updated = Column('hp_last_updated', DateTime, default=func.now())
 
+    # relations
     attribute = relationship('Attribute', secondary=character_attribute, uselist=False)
     user = relationship('User', back_populates='character', uselist=False)
     items = relationship('CharacterItem', back_populates='character')
@@ -110,23 +111,28 @@ class Character(Base):
     def is_full_hp(self):
         return self.current_hp == self.max_hp
 
+    def is_alive(self):
+        return self.current_hp > 0
+
     @hybrid_property
     def current_hp(self):
-        if self._current_hp < self.max_hp:
-            regen = occurrence(self._hp_last_updated, prop.GEN_HP_INTERVAL) * prop.GEN_HP_AMOUNT
-            self._current_hp += regen
-            if self._current_hp > self.max_hp:  # if current hp exceeds the max hp
-                self._current_hp = self.max_hp  # set the current hp value as max hp
+        if self.max_hp:  # if max hp is not None
+            if self._current_hp < self.max_hp:
+                regen = occurrence(self._hp_last_updated, prop.GEN_HP_INTERVAL) * prop.GEN_HP_AMOUNT
+                self._current_hp += regen
+                if self._current_hp > self.max_hp:  # if current hp exceeds the max hp
+                    self._current_hp = self.max_hp  # set the current hp value as max hp
         return self._current_hp
 
     @current_hp.setter
     def current_hp(self, value):
-        if value > self.max_hp:
-            raise ValueError('value exceeds the max hp')
+        if self.max_hp:  # if max hp is not None
+            if value > self.max_hp:
+                raise ValueError('value exceeds the max_hp')
 
-        if self.is_full_hp():  # condition first if value is full hp
-            if value < self.max_hp:  # condition if the new value is is not full hp
-                self._hp_last_updated = datetime.now()
+            if self.is_full_hp():  # condition first if value is full hp
+                if value < self.max_hp:  # condition if the new value is is not full hp
+                    self._hp_last_updated = datetime.now()
 
         self._current_hp = value
 
@@ -170,8 +176,8 @@ class Character(Base):
         self.attribute.defense = value
 
     def __repr__(self):
-        return "<Character(level='{}', exp='{}', money='{}')>".format(
-            self.level, self.exp, self.money
+        return "<Character(level='{}', exp='{}', current_hp='{}', money='{}')>".format(
+            self.level, self.exp, self._current_hp, self.money
         )
 
 

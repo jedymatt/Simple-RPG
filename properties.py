@@ -1,6 +1,2 @@
-from configparser import ConfigParser
-
-config = ConfigParser()
-config.read('config.ini')
-GEN_HP_AMOUNT = int(config.get('hp_generate', 'amount'))
-GEN_HP_INTERVAL = int(config.get('hp_generate', 'interval'))
+GEN_HP_AMOUNT = 10
+GEN_HP_INTERVAL = 600  # 10 minutes

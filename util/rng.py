@@ -17,7 +17,7 @@ def die():
         return 1
 
 
-def hps_atk_def_rand(die_number) -> tuple:
+def random_attribute(die_number) -> tuple:
     if die_number == 1:
         return random.randint(5, 9), random.randint(5, 9), random.randint(5, 9)
     elif die_number == 2:

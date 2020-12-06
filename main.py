@@ -21,7 +21,7 @@ def main():
     bot = Bot(command_prefix='.')
 
     # connect to database
-    bot.engine.connect_engine()
+    bot.engine.connect()
 
     @bot.command()
     async def ping(ctx: commands.Context):
