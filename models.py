@@ -1,6 +1,11 @@
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Table, Integer, String, Text, BigInteger, ForeignKey, TIMESTAMP, Interval
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy import Column, Table, Integer, String, Text, BigInteger, ForeignKey, DateTime, Interval
 from sqlalchemy.orm import relationship
+from datetime import datetime
+from utils import occurrence
+import properties as prop
+from sqlalchemy.sql import func
 
 Base = declarative_base()
 
@@ -56,14 +61,15 @@ class User(Base):
 
     __tablename__ = 'users'
 
-    id = Column(Integer, primary_key=True)
+    _id = Column('id', Integer, primary_key=True)
     discord_id = Column(BigInteger, unique=True)
     init_roll = Column(Integer)
+    last_online = Column(DateTime, default=func.now(), onupdate=func.now())
 
     character = relationship('Character', back_populates='user', uselist=False)
 
     def __repr__(self):
-        return "<User(id='{}', discord_id='{}' init_roll='{}')>".format(self.id, self.discord_id, self.init_roll)
+        return "<User(discord_id='{}' init_roll='{}')>".format(self.discord_id, self.init_roll)
 
 
 class Attribute(Base):
@@ -71,14 +77,14 @@ class Attribute(Base):
 
     __tablename__ = 'attributes'
 
-    id = Column(Integer, primary_key=True)
+    _id = Column('id', Integer, primary_key=True)
     hp = Column(Integer)
     strength = Column(Integer)
     defense = Column(Integer)
 
     def __repr__(self):
-        return "<Attribute(id='{}', current_hp='{}', strength='{}', defense='{}')>".format(
-            self.id, self.hp, self.strength, self.defense
+        return "<Attribute(hp='{}', strength='{}', defense='{}')>".format(
+            self.hp, self.strength, self.defense
         )
 
 
@@ -87,12 +93,13 @@ class Character(Base):
 
     __tablename__ = 'characters'
 
-    id = Column(Integer, primary_key=True)
+    _id = Column('id', Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'))
     level = Column(Integer)
     exp = Column(Integer)
-    current_hp = Column(Integer)  # current current_hp
+    _current_hp = Column('current_hp', Integer)  # current hp
     money = Column(Integer)
+    _hp_last_updated = Column('hp_last_updated', DateTime, default=func.now())
 
     attribute = relationship('Attribute', secondary=character_attribute, uselist=False)
     user = relationship('User', back_populates='character', uselist=False)
@@ -100,9 +107,71 @@ class Character(Base):
     equipments = relationship('CharacterEquipment', back_populates='character')
     location = relationship('Location', secondary=character_location, back_populates='characters', uselist=False)
 
+    def is_full_hp(self):
+        return self.current_hp == self.max_hp
+
+    @hybrid_property
+    def current_hp(self):
+        if self._current_hp < self.max_hp:
+            regen = occurrence(self._hp_last_updated, prop.GEN_HP_INTERVAL) * prop.GEN_HP_AMOUNT
+            self._current_hp += regen
+            if self._current_hp > self.max_hp:  # if current hp exceeds the max hp
+                self._current_hp = self.max_hp  # set the current hp value as max hp
+        return self._current_hp
+
+    @current_hp.setter
+    def current_hp(self, value):
+        if value > self.max_hp:
+            raise ValueError('value exceeds the max hp')
+
+        if self.is_full_hp():  # condition first if value is full hp
+            if value < self.max_hp:  # condition if the new value is is not full hp
+                self._hp_last_updated = datetime.now()
+
+        self._current_hp = value
+
+    @hybrid_property
+    def max_hp(self):
+        if self.attribute:
+            return self.attribute.hp
+        else:
+            return None
+
+    @max_hp.setter
+    def max_hp(self, value):
+        if not self.attribute:
+            self.attribute = Attribute()
+        self.attribute.hp = value
+
+    @hybrid_property
+    def strength(self):
+        if self.attribute:
+            return self.attribute.strength
+        else:
+            return None
+
+    @strength.setter
+    def strength(self, value):
+        if not self.attribute:
+            self.attribute = Attribute()
+        self.attribute.strength = value
+
+    @hybrid_property
+    def defense(self):
+        if self.attribute:
+            return self.attribute.defense
+        else:
+            return None
+
+    @defense.setter
+    def defense(self, value):
+        if not self.attribute:
+            self.attribute = Attribute()
+        self.attribute.defense = value
+
     def __repr__(self):
-        return "<Character(id='{}', user_id='{}', level='{}', exp='{}', money='{}')>".format(
-            self.id, self.user_id, self.level, self.exp, self.money
+        return "<Character(level='{}', exp='{}', money='{}')>".format(
+            self.level, self.exp, self.money
         )
 
 
