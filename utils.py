@@ -1,15 +1,31 @@
 from datetime import datetime, timedelta
 
 
-def time_left(*, last_updated: datetime, interval):
+def time_left(last_updated: datetime, interval: float) -> timedelta:
+    """
+
+    Args:
+        last_updated: last updated
+        interval: interval in seconds
+
+    Returns: remaining time
+
+    """
     now = datetime.now()
-    elapsed = now.timestamp() - last_updated.timestamp()
-    return timedelta(seconds=interval - (elapsed % interval))
+    elapsed = now - last_updated
+    return timedelta(seconds=interval - (elapsed.total_seconds() % interval))
 
 
-def occurrence(last_changed: datetime, interval):
+def occurrence(last_updated: datetime, interval: float) -> int:
+    """
+
+    Args:
+        last_updated: last updated
+        interval: interval in seconds
+
+    Returns: number of occurrences
+
+    """
     now = datetime.now()
-    # elapsed = now.timestamp() - last_updated.timestamp()
-    return int(now.timestamp() - last_changed.timestamp()) // interval
-
-# time_left(last_updated=datetime.now(), interval=4)
+    elapsed = now - last_updated
+    return int(elapsed.total_seconds() // interval)
