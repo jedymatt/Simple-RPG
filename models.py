@@ -1,6 +1,6 @@
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy import Column, Table, Integer, String, Text, BigInteger, ForeignKey, DateTime, Interval
+from sqlalchemy import Column, Table, Integer, String, Text, BigInteger, ForeignKey, DateTime, Interval, Boolean
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from utils import occurrence
@@ -11,11 +11,15 @@ Base = declarative_base()
 
 # TODO: add entity loot item
 
-"""
-------------------------------------------------------------------------------------------------------------------------
-    Associative Tables will always be placed above the topmost class
-"""
+""""
 
+    Association tables
+    
+    Variable:
+        character_attribute
+        character_location
+
+"""
 character_attribute = Table(
     'character_attributes',
     Base.metadata,
@@ -51,11 +55,8 @@ entity_location = Table(
     Column('location_id', ForeignKey('locations.id'))
 )
 
-"""
-------------------------------------------------------------------------------------------------------------------------
-"""
 
-
+# DONE
 class User(Base):
     """User class"""
 
@@ -72,6 +73,7 @@ class User(Base):
         return "<User(discord_id='{}' init_roll='{}')>".format(self.discord_id, self.init_roll)
 
 
+# DONE
 class Attribute(Base):
     """Attribute class"""
 
@@ -88,6 +90,7 @@ class Attribute(Base):
         )
 
 
+# TODO: add companion, a friendly entity in the character, and equipment
 class Character(Base):
     """Character class"""
 
@@ -105,7 +108,7 @@ class Character(Base):
     attribute = relationship('Attribute', secondary=character_attribute, uselist=False)
     user = relationship('User', back_populates='character', uselist=False)
     items = relationship('CharacterItem', back_populates='character')
-    equipments = relationship('CharacterEquipment', back_populates='character')
+    # equipments = relationship('CharacterEquipment', back_populates='character')
     location = relationship('Location', secondary=character_location, back_populates='characters', uselist=False)
 
     def is_full_hp(self):
@@ -128,7 +131,7 @@ class Character(Base):
     def current_hp(self, value):
         if self.max_hp:  # if max hp is not None
             if value > self.max_hp:
-                raise ValueError('value exceeds the max_hp')
+                raise ValueError('Value exceeds the max_hp')
 
             if self.is_full_hp():  # condition first if value is full hp
                 if value < self.max_hp:  # condition if the new value is is not full hp
@@ -177,31 +180,32 @@ class Character(Base):
 
     def __repr__(self):
         return "<Character(level='{}', exp='{}', current_hp='{}', money='{}')>".format(
-            self.level, self.exp, self._current_hp, self.money
+            self.level, self.exp, self.current_hp, self.money
         )
 
 
+# DONE
 class ItemType(Base):
-    """ItemType class"""
+    """
+
+    ItemType class
+
+    Available:
+        consumable,
+        raw,
+        gear
+
+    """
 
     __tablename__ = 'item_types'
 
-    id = Column(Integer, primary_key=True)
+    _id = Column('id', Integer, primary_key=True)
     name = Column(String(20), unique=True)
 
     items = relationship('Item', back_populates='item_type')
 
     def __repr__(self):
-        return "<ItemType(id='{}', name='{}')>".format(self.id, self.name)
-
-
-class EffectAttribute(Base):
-    """EffectAttribute class"""
-    __tablename__ = 'effect_attributes'
-
-    id = Column(Integer, primary_key=True)
-    attribute_id = Column(Integer, ForeignKey('attributes.id'))
-    duration = Column(Interval)
+        return "<ItemType(name='{}')>".format(self.name)
 
 
 class Item(Base):
@@ -209,19 +213,18 @@ class Item(Base):
 
     __tablename__ = 'items'
 
-    id = Column(Integer, primary_key=True)
-    item_type_id = Column(Integer, ForeignKey('item_types.id'))
+    _id = Column('id', Integer, primary_key=True)
+    _item_type_id = Column('item_type_id', Integer, ForeignKey('item_types.id'))
     name = Column(String(20), unique=True)
     description = Column(Text)
+    duration = Column(Interval)
 
     item_type = relationship('ItemType', back_populates='items', uselist=False)
     attribute = relationship('Attribute', secondary=item_attribute, uselist=False)
 
-    # effect = relationship
-
     def __repr__(self):
-        return "<Item(id='{}', item_type_id='{}', name='{}', description='{}')>".format(
-            self.id, self.item_type_id, self.name, self.description
+        return "<Item(name='{}', description='{}')>".format(
+            self.name, self.description
         )
 
 
@@ -282,7 +285,7 @@ class CharacterEquipment(Base):
     item_id = Column(Integer, ForeignKey('items.id'))
     equipment_slot_id = Column(Integer, ForeignKey('equipment_slots.id'))
 
-    character = relationship('Character', back_populates='equipments', uselist=False)
+    # character = relationship('Character', back_populates='equipments', uselist=False)
     item = relationship('Item', uselist=False)
     equipment_slot = relationship('EquipmentSlot', uselist=False)
 

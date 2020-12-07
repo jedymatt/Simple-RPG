@@ -11,32 +11,28 @@ class Guest(commands.Cog):
 
     @commands.command()
     async def register(self, ctx: commands.Context):
-        """
-        display instructions and welcoming message for the guest
+        """Show register message
 
-        :param ctx:
+        Args:
+            ctx:
         """
-        self.users[ctx.author.id] = User(discord_id=ctx.author.id)
-        await ctx.send('{} is now registered'.format(ctx.author))
+        pass
 
     @commands.command()
     async def roll(self, ctx: commands.Context):
         """
-        Rolls a die for the guest
 
-        :param ctx: context
+        Args:
+            ctx:
         """
-        roll_result = rng.die()
-        self.users[ctx.author.id].init_roll = roll_result
-        print(self.users[ctx.author.id])
-        await ctx.send(roll_result)
+        pass
 
     @commands.command()
     async def confirm(self, ctx: commands.Context):
         """
-        Registers the guest
 
-        :param ctx: context
+        Args:
+            ctx:
         """
         pass
 
