@@ -106,7 +106,7 @@ class Character(Base):
     attribute = relationship('Attribute', secondary=character_attribute, uselist=False)
     user = relationship('User', back_populates='character', uselist=False)
     items = relationship('CharacterItem', back_populates='character')
-    # equipments = relationship('CharacterEquipment', back_populates='character')
+    equipments = relationship('CharacterEquipment', back_populates='character')
     location = relationship('Location', secondary=character_location, back_populates='characters', uselist=False)
 
     def is_full_hp(self):
@@ -185,20 +185,18 @@ class Character(Base):
 # DONE
 class ItemType(Base):
     """
-
     ItemType class
 
     Available:
         consumable,
         raw,
         gear
-
     """
 
     __tablename__ = 'item_types'
 
     _id = Column('id', Integer, primary_key=True)
-    name = Column(String(20), unique=True)
+    name = Column(String(10), unique=True)
 
     items = relationship('Item', back_populates='item_type')
 
@@ -214,7 +212,7 @@ class Item(Base):
 
     _id = Column('id', Integer, primary_key=True)
     _item_type_id = Column('item_type_id', Integer, ForeignKey('item_types.id'))
-    name = Column(String(20), unique=True)
+    name = Column(String(10), unique=True)
     description = Column(Text)
     duration = Column(Interval, default=timedelta())
 
@@ -253,8 +251,8 @@ class ShopType(Base):
     ShopType class
 
     Types:
-        common
-        exclusive
+        Common
+        Exclusive
     """
 
     __tablename__ = 'shop_types'
@@ -289,66 +287,81 @@ class ShopItem(Base):
         )
 
 
+# DONE
 class EquipmentSlot(Base):
-    """EquipmentSlot class"""
+    """
+    EquipmentSlot class
+
+    Slots:
+        Weapon
+        Shield
+    """
 
     __tablename__ = 'equipment_slots'
 
-    id = Column(Integer, primary_key=True)
+    _id = Column('id', Integer, primary_key=True)
     name = Column(Integer, unique=True)
 
     def __repr__(self):
-        return "<EquipmentSlot(id='{}', name='{}')>".format(self.id, self.name)
+        return "<EquipmentSlot(name='{}')>".format(self.name)
 
 
+# DONE
 class CharacterEquipment(Base):
     """CharacterEquipment class"""
 
     __tablename__ = 'character_equipments'
 
-    id = Column(Integer, primary_key=True)
-    character_id = Column(Integer, ForeignKey('characters.id'))
-    item_id = Column(Integer, ForeignKey('items.id'))
-    equipment_slot_id = Column(Integer, ForeignKey('equipment_slots.id'))
+    _id = Column('id', Integer, primary_key=True)
+    _character_id = Column('character_id', Integer, ForeignKey('characters.id'))
+    _item_id = Column('item_id', Integer, ForeignKey('items.id'))
+    _equipment_slot_id = Column('equipment_slot_id', Integer, ForeignKey('equipment_slots.id'))
 
-    # character = relationship('Character', back_populates='equipments', uselist=False)
+    character = relationship('Character', back_populates='equipments', uselist=False)
     item = relationship('Item', uselist=False)
     equipment_slot = relationship('EquipmentSlot', uselist=False)
 
     def __repr__(self):
-        return "<CharacterEquipment(id='{}', character_id='{}', item_id='{}', equipment_slot_id='{}')>".format(
-            self.id, self.character_id, self.item_id, self.equipment_slot_id
+        return "<CharacterEquipment(item='{}', equipment_slot='{}')>".format(
+            self.item, self.equipment_slot
         )
 
 
+# DONE
 class Location(Base):
     """Location class"""
 
     __tablename__ = 'locations'
 
-    id = Column(Integer, primary_key=True)
-    name = Column(Integer, unique=True)
+    _id = Column('id', Integer, primary_key=True)
+    name = Column(String(10), unique=True)
     description = Column(Text)
 
     characters = relationship('Character', secondary=character_location, back_populates='location')
     entities = relationship('Entity', secondary=entity_location, back_populates='location')
 
     def __repr__(self):
-        return "<Location(id='{}', name='{}', description='{}')>".format(self.id, self.name, self.description)
+        return "<Location(name='{}', description='{}')>".format(self.name, self.description)
 
-
+# DONE
 class EntityType(Base):
-    """EntityType class"""
+    """
+    EntityType class
+
+    Types:
+        Hostile
+        Friendly
+    """
 
     __tablename__ = 'entity_types'
 
-    id = Column(Integer, primary_key=True)
-    name = Column(String(20), unique=True)
+    _id = Column('id', Integer, primary_key=True)
+    name = Column(String(10), unique=True)
 
     entities = relationship('Entity', back_populates='entity_type')
 
     def __repr__(self):
-        return "<EntityType(id='{}', name='{}')>".format(self.id, self.name)
+        return "<EntityType(name='{}')>".format(self.name)
 
 
 class Entity(Base):
@@ -358,7 +371,7 @@ class Entity(Base):
 
     id = Column(Integer, primary_key=True)
     entity_type_id = Column(Integer, ForeignKey('entity_types.id'))
-    name = Column(String(20), unique=True)
+    name = Column(String(10), unique=True)
     description = Column(Text)
     level = Column(Integer)
     hp = Column(Integer)
