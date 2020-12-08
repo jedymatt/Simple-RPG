@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from sqlalchemy import Column, Table, Integer, String, Text, BigInteger, ForeignKey, DateTime, Interval
+from sqlalchemy import Column, Table, Integer, String, Text, BigInteger, ForeignKey, DateTime, Interval, Float, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
@@ -53,6 +53,12 @@ entity_location = Table(
     Column('location_id', ForeignKey('locations.id'), primary_key=True)
 )
 
+"""
+
+Classes
+
+"""
+
 
 # DONE
 class User(Base):
@@ -88,7 +94,7 @@ class Attribute(Base):
         )
 
 
-# TODO: add companion, a friendly entity in the character
+# DONE
 class Character(Base):
     """Character class"""
 
@@ -108,6 +114,7 @@ class Character(Base):
     items = relationship('CharacterItem', back_populates='character')
     equipments = relationship('CharacterEquipment', back_populates='character')
     location = relationship('Location', secondary=character_location, back_populates='characters', uselist=False)
+    companions = relationship('CharacterCompanion')
 
     def is_full_hp(self):
         return self.current_hp == self.max_hp
@@ -343,6 +350,7 @@ class Location(Base):
     def __repr__(self):
         return "<Location(name='{}', description='{}')>".format(self.name, self.description)
 
+
 # DONE
 class EntityType(Base):
     """
@@ -364,39 +372,131 @@ class EntityType(Base):
         return "<EntityType(name='{}')>".format(self.name)
 
 
+# DONE
 class Entity(Base):
     """Entity class"""
 
     __tablename__ = 'entities'
 
-    id = Column(Integer, primary_key=True)
-    entity_type_id = Column(Integer, ForeignKey('entity_types.id'))
+    _id = Column('id', Integer, primary_key=True)
+    _entity_type_id = Column('entity_type_id', Integer, ForeignKey('entity_types.id'))
+    level = Column(Integer)
+    _current_hp = Column('current_hp', Integer)
     name = Column(String(10), unique=True)
     description = Column(Text)
-    level = Column(Integer)
-    hp = Column(Integer)
 
     entity_type = relationship('EntityType', back_populates='entities', uselist=False)
-    location = relationship('Location', secondary=entity_location, back_populates='entities', uselist=False)
     attribute = relationship('Attribute', secondary=entity_attribute, uselist=False)
+    location = relationship('Location', secondary=entity_location, back_populates='entities', uselist=False)
+    entity_loot = relationship('EntityLoot', uselist=False)
+
+    @hybrid_property
+    def current_hp(self):
+        return self._current_hp
+
+    @current_hp.setter
+    def current_hp(self, value):
+        if self.max_hp:
+            if value > self.max_hp:
+                raise ValueError('Value exceeds the max_hp')
+        self._current_hp = value
+
+    @hybrid_property
+    def max_hp(self):
+        if self.attribute:
+            return self.attribute.hp
+        else:
+            return None
+
+    @max_hp.setter
+    def max_hp(self, value):
+        if not self.attribute:
+            self.attribute = Attribute()
+        self.attribute.hp = value
+
+    @hybrid_property
+    def strength(self):
+        if self.attribute:
+            return self.attribute.strength
+        else:
+            return None
+
+    @strength.setter
+    def strength(self, value):
+        if not self.attribute:
+            self.attribute = Attribute()
+        self.attribute.strength = value
+
+    @hybrid_property
+    def defense(self):
+        if self.attribute:
+            return self.attribute.defense
+        else:
+            return None
+
+    @defense.setter
+    def defense(self, value):
+        if not self.attribute:
+            self.attribute = Attribute()
+        self.attribute.defense = value
 
     def __repr__(self):
-        return "<Entity(id='{}', entity_type_id='{}', name='{}', description='{}', level='{}')>".format(
-            self.id, self.entity_type_id, self.name, self.description, self.level
+        return "<Entity(level='{}', name='{}', description='{}')>".format(
+            self.level, self.name, self.description
         )
 
 
-class LootItem:
-    # TODO: add loot item
+# DONE
+class EntityLoot(Base):
+    """EntityLoot class"""
 
+    __tablename__ = 'entity_loots'
+
+    _id = Column('id', Integer, primary_key=True)
+    _entity_id = Column('entity_id', Integer, ForeignKey('entities.id'))
+    exp = Column(Integer)
+    money = Column(Integer)
+
+    items = relationship('LootItem')
+
+    def __repr__(self):
+        return "<EntityLoot(exp='{}', money='{}')>".format(
+            self.exp, self.money
+        )
+
+
+# DONE
+class LootItem(Base):
     """LootItem class"""
 
     __tablename__ = 'loot_items'
 
-    id = Column(Integer, primary_key=True)
-    item_id = Column(Integer, ForeignKey('items.id'))
+    _entity_loot_id = Column('entity_loot_id', ForeignKey('entity_loots.id'), primary_key=True)
+    _item_id = Column('item_id', ForeignKey('items.id'), primary_key=True)
+    drop_chance = Column(Float)
+    drop_amount_minimum = Column(Integer)
+    drop_amount_maximum = Column(Integer)
+
+    def __repr__(self):
+        return "<EntityLootItem(drop_chance='{}', drop_amount_minimum='{}', drop_amount_maximum='{}')>".format(
+            self.drop_chance, self.drop_amount_minimum, self.drop_amount_maximum
+        )
 
 
-class EntityLoot:
-    # TODO: add entity loot
-    pass
+# DONE
+class CharacterCompanion(Base):
+    """Companion class"""
+
+    __tablename__ = 'character_companions'
+
+    _character_id = Column('character_id', Integer, ForeignKey('characters.id'), primary_key=True)
+    _entity_id = Column('entity_id', Integer, ForeignKey('entities.id'), primary_key=True)
+    main = Column(Boolean)
+    apply_attribute = Column(Boolean)
+    action_duration = Column(Interval)
+    action_started = Column(DateTime)
+
+    def __repr__(self):
+        return "<CharacterCompanion(main='{}', apply_attribute='{}', action_duration='{}', action_started='')>".format(
+            self.main, self.apply_attribute, self.action_duration, self.action_started
+        )
