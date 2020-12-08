@@ -1,11 +1,13 @@
+from datetime import datetime, timedelta
+
+from sqlalchemy import Column, Table, Integer, String, Text, BigInteger, ForeignKey, DateTime, Interval
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy import Column, Table, Integer, String, Text, BigInteger, ForeignKey, DateTime, Interval, Boolean
 from sqlalchemy.orm import relationship
-from datetime import datetime
-from utils import occurrence
-import properties as prop
 from sqlalchemy.sql import func
+
+import properties as prop
+from utils import occurrence
 
 Base = declarative_base()
 
@@ -15,10 +17,6 @@ Base = declarative_base()
 
     Association tables
     
-    Variable:
-        character_attribute
-        character_location
-
 """
 character_attribute = Table(
     'character_attributes',
@@ -44,15 +42,15 @@ item_attribute = Table(
 entity_attribute = Table(
     'entity_attributes',
     Base.metadata,
-    Column('entity_id', ForeignKey('entities.id')),
-    Column('attribute_id', ForeignKey('attributes.id'))
+    Column('entity_id', ForeignKey('entities.id'), primary_key=True),
+    Column('attribute_id', ForeignKey('attributes.id'), primary_key=True)
 )
 
 entity_location = Table(
     'entity_locations',
     Base.metadata,
-    Column('entity_id', ForeignKey('entities.id')),
-    Column('location_id', ForeignKey('locations.id'))
+    Column('entity_id', ForeignKey('entities.id'), primary_key=True),
+    Column('location_id', ForeignKey('locations.id'), primary_key=True)
 )
 
 
@@ -90,7 +88,7 @@ class Attribute(Base):
         )
 
 
-# TODO: add companion, a friendly entity in the character, and equipment
+# TODO: add companion, a friendly entity in the character
 class Character(Base):
     """Character class"""
 
@@ -208,6 +206,7 @@ class ItemType(Base):
         return "<ItemType(name='{}')>".format(self.name)
 
 
+# DONE
 class Item(Base):
     """Item class"""
 
@@ -217,49 +216,76 @@ class Item(Base):
     _item_type_id = Column('item_type_id', Integer, ForeignKey('item_types.id'))
     name = Column(String(20), unique=True)
     description = Column(Text)
-    duration = Column(Interval)
+    duration = Column(Interval, default=timedelta())
 
     item_type = relationship('ItemType', back_populates='items', uselist=False)
     attribute = relationship('Attribute', secondary=item_attribute, uselist=False)
 
     def __repr__(self):
-        return "<Item(name='{}', description='{}')>".format(
-            self.name, self.description
+        return "<Item(name='{}', description='{}', duration='{}')>".format(
+            self.name, self.description, self.duration
         )
 
 
-class ShopItem(Base):
-    """ShopItem class"""
-
-    __tablename__ = 'shop_items'
-
-    id = Column(Integer, primary_key=True)
-    item_id = Column(Integer, ForeignKey('items.id'))
-    cost = Column(Integer)
-    item = relationship('Item', uselist=False)
-
-    def __repr__(self):
-        return "<ShopItem(id='{}', item_id='{}', cost='{}')>".format(
-            self.id, self.item_id, self.cost
-        )
-
-
+# DONE
 class CharacterItem(Base):
     """CharacterItem class"""
 
     __tablename__ = 'character_items'
 
-    # id = Column(Integer, primary_key=True)
-    character_id = Column(Integer, ForeignKey('characters.id'), primary_key=True)
-    item_id = Column(Integer, ForeignKey('items.id'), primary_key=True)
+    _character_id = Column('character_id', Integer, ForeignKey('characters.id'), primary_key=True)
+    _item_id = Column('item_id', Integer, ForeignKey('items.id'), primary_key=True)
     amount = Column(Integer)
 
     character = relationship('Character', back_populates='items', uselist=False)
     item = relationship('Item')
 
     def __repr__(self):
-        return "<CharacterItem(character_id='{}', item_id='{}')>".format(
-            self.character_id, self.item_id
+        return "<CharacterItem(item='{}', amount='{}')>".format(
+            self.item, self.amount
+        )
+
+
+# NOT CONNECTED TO THE CHARACTER
+# DONE
+class ShopType(Base):
+    """
+    ShopType class
+
+    Types:
+        common
+        exclusive
+    """
+
+    __tablename__ = 'shop_types'
+
+    _id = Column('id', Integer, primary_key=True)
+    name = Column(String(10), unique=True)
+
+    def __repr__(self):
+        return "<ShopType(name='{}')>".format(
+            self.name
+        )
+
+
+# NOT CONNECTED TO THE CHARACTER
+# DONE
+class ShopItem(Base):
+    """ShopItem class"""
+
+    __tablename__ = 'shop_items'
+
+    _id = Column('id', Integer, primary_key=True)
+    _item_id = Column('item_id', Integer, ForeignKey('items.id'))
+    _shop_type_id = Column('shop_type_id', Integer, ForeignKey('shop_types.id'))
+    cost = Column(Integer)
+
+    item = relationship('Item', uselist=False)
+    type = relationship('ShopType', uselist=False)
+
+    def __repr__(self):
+        return "<ShopItem(item='{}',cost='{}')>".format(
+            self.item, self.cost
         )
 
 
