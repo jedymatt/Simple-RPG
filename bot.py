@@ -1,10 +1,8 @@
 import db
 import os
 
+import discord
 from discord.ext import commands
-from dotenv import load_dotenv
-
-load_dotenv()
 
 
 class Bot(commands.Bot):
@@ -13,15 +11,13 @@ class Bot(commands.Bot):
         self.engine = db.engine
         self.session = db.session
 
-    async def on_ready(self):
-        print(f'Logged in as {self.user}')
-
 
 def main():
     bot = Bot(command_prefix='.')
 
-    # connect to database
-    bot.engine.connect()
+    @bot.event
+    async def on_ready(self):
+        print(f'Logged in as {self.user}')
 
     @bot.command()
     async def ping(ctx: commands.Context):
@@ -31,6 +27,9 @@ def main():
     for filename in os.listdir('./cogs'):
         if filename.endswith('.py'):
             bot.load_extension(f'cogs.{filename[:-3]}')
+
+    # connect to database
+    # bot.engine.connect()
 
     # run bot
     bot.run(os.getenv('TOKEN'))

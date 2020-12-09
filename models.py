@@ -11,8 +11,6 @@ from utils import occurrence
 
 Base = declarative_base()
 
-# TODO: add entity loot item
-
 """"
 
     Association tables

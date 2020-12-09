@@ -1,13 +1,21 @@
 from discord.ext import commands
-from models import Character, User
+from models import Character
+from models import User
 from util import rng
 
 
 class Guest(commands.Cog):
 
-    def __init__(self, client: commands.Bot):
-        self.client = client
+    def __init__(self, bot: commands.Bot):
+        self.bot = bot
         self.users = {}
+
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        if self.bot.user.mentioned_in(message):
+            await message.channel.send("bot mentioned")
+
+        await self.bot.process_commands(message)
 
     @commands.command()
     async def register(self, ctx: commands.Context):
@@ -16,7 +24,7 @@ class Guest(commands.Cog):
         Args:
             ctx:
         """
-        pass
+        print('register command')
 
     @commands.command()
     async def roll(self, ctx: commands.Context):
