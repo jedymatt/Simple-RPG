@@ -1,30 +1,35 @@
 from discord.ext import commands
 from models import Character
 from models import User
+import discord
 from util import rng
 
 
 class Guest(commands.Cog):
 
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot):
         self.bot = bot
         self.users = {}
 
-    @commands.Cog.listener()
-    async def on_message(self, message):
-        if self.bot.user.mentioned_in(message):
-            await message.channel.send("bot mentioned")
-
-        await self.bot.process_commands(message)
-
     @commands.command()
-    async def register(self, ctx: commands.Context):
-        """Show register message
+    async def welcome(self, ctx: commands.Context):
+        """Shows welcoming message to new players"""
+        embed = discord.Embed(
+            title='Welcome to Simple-RPG',
+            color=discord.Color.dark_gold()
+        )
+        embed.add_field(name='To get started:', value=f'Type `{self.bot.command_prefix}roll` to roll the die.')
+        await ctx.send(embed=embed)
 
-        Args:
-            ctx:
-        """
-        print('register command')
+    # @commands.command()
+    # async def register(self, ctx: commands.Context):
+    #     """Show register message
+    #
+    #     Args:
+    #         ctx:
+    #     """
+    #
+    #     print('register command')
 
     @commands.command()
     async def roll(self, ctx: commands.Context):
@@ -33,7 +38,9 @@ class Guest(commands.Cog):
         Args:
             ctx:
         """
-        pass
+        result = rng.die()
+        self.users[ctx.author.id] = User(discord_id=ctx.author.id, init_roll=result)
+        await ctx.send(result)
 
     @commands.command()
     async def confirm(self, ctx: commands.Context):

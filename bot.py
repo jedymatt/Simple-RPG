@@ -3,6 +3,7 @@ import os
 
 import discord
 from discord.ext import commands
+from models import User
 
 
 class Bot(commands.Bot):
@@ -16,8 +17,8 @@ def main():
     bot = Bot(command_prefix='.')
 
     @bot.event
-    async def on_ready(self):
-        print(f'Logged in as {self.user}')
+    async def on_ready():
+        print(f'Logged in as {bot.user}')
 
     @bot.command()
     async def ping(ctx: commands.Context):
@@ -29,7 +30,7 @@ def main():
             bot.load_extension(f'cogs.{filename[:-3]}')
 
     # connect to database
-    # bot.engine.connect()
+    bot.engine.connect()
 
     # run bot
     bot.run(os.getenv('TOKEN'))
