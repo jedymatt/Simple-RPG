@@ -1,7 +1,5 @@
 # Simple RPG
 
----
-
 A text-based RPG bot in discord.
 
 ## Game Features
@@ -12,5 +10,4 @@ A text-based RPG bot in discord.
 - Have a pet
 - Gather materials
 
----
 
