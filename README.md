@@ -1,2 +1,16 @@
-# Simple-RPG
-Simple-RPG is a role-playing and text-based game for discord bot.
+# Simple RPG
+
+---
+
+A text-based RPG bot in discord.
+
+## Game Features
+
+- Fight mobs
+- Visit places
+- Craft items or equipments
+- Have a pet
+- Gather materials
+
+---
+
