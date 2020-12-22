@@ -6,16 +6,15 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
-import properties as prop
 from utils import occurrence
+
+"""Character automated HP generation variables"""
+HP_GEN_AMOUNT = 10
+HP_GEN_INTERVAL = 600  # 600 seconds is 10 equivalent to 10 minutes
 
 Base = declarative_base()
 
-""""
-
-    Association tables
-    
-"""
+"""" Association tables """
 character_attribute = Table(
     'character_attributes',
     Base.metadata,
@@ -122,9 +121,9 @@ class Character(Base):
 
     @hybrid_property
     def current_hp(self):
-        if self.max_hp:  # if max hp is not None
+        if self._current_hp and self.max_hp:  # if max hp is not None
             if self._current_hp < self.max_hp:
-                regen = occurrence(self._hp_last_updated, prop.GEN_HP_INTERVAL) * prop.GEN_HP_AMOUNT
+                regen = occurrence(self._hp_last_updated, HP_GEN_INTERVAL) * HP_GEN_AMOUNT
                 self._current_hp += regen
                 if self._current_hp > self.max_hp:  # if current hp exceeds the max hp
                     self._current_hp = self.max_hp  # set the current hp value as max hp

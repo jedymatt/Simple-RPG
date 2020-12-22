@@ -3,7 +3,7 @@ import os
 
 import discord
 from discord.ext import commands
-from models import User
+from models import User, Character
 
 
 class Bot(commands.Bot):
@@ -15,6 +15,24 @@ class Bot(commands.Bot):
 
 def main():
     bot = Bot(command_prefix='.')
+
+    @bot.command()
+    async def character(ctx: commands.Context):
+        """check if character exists"""
+        session = bot.session
+        author_id = ctx.author.id
+
+        char = session.query(Character).filter(User.discord_id == author_id).first()
+        await ctx.send(char)
+
+    @bot.command()
+    async def user(ctx: commands.Context):
+        """check if user exists """
+        session = bot.session
+        author_id = ctx.author.id
+
+        usr = session.query(User).filter(User.discord_id == author_id).first()
+        await ctx.send(usr)
 
     @bot.event
     async def on_ready():
