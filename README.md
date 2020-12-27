@@ -7,7 +7,7 @@ A text-based RPG bot in discord.
 - Fight mobs
 - Visit places
 - Craft items or equipments
-- Have a pet
+- Have a pet/companion
 - Gather materials
 - Buy or sell items
 

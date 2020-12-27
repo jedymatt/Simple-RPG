@@ -51,17 +51,18 @@ class Adventurer(commands.Cog):
 
         # Embedded format
         _embed = discord.Embed(
-            title=f"{ctx.author.name}'s Profile",
+            title=f"{ctx.author.name}'s profile",
             colour=discord.Colour.orange(),
         )
         _embed.set_thumbnail(url=ctx.author.avatar_url)
 
         _embed.add_field(
-            name='Details',
+            name='General Info',
             value="Level: {}\n"
                   "Exp: {} / {}\n"
                   "Location: {}".format(character.level,
                                         character.exp,
+                                        character.next_level_exp(),
                                         None,
                                         None),
             inline=False
@@ -78,12 +79,10 @@ class Adventurer(commands.Cog):
         )
 
         _embed.add_field(
-            name='Economy',
+            name='Other Info',
             value="Money: {}".format(character.money),
             inline=False
         )
-
-        _embed.set_footer(text='*Simple RPG*', icon_url=self.bot.user.avatar_url)
 
         await ctx.send(embed=_embed)
 

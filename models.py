@@ -7,6 +7,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from utils import occurrence
+from math import floor
 
 """Character automated HP generation variables"""
 HP_GEN_AMOUNT = 10
@@ -179,6 +180,23 @@ class Character(Base):
         if not self.attribute:
             self.attribute = Attribute()
         self.attribute.defense = value
+
+    def next_level_exp(self):
+        base_exp = 200
+        return floor(base_exp * (self.level ** 1.2))
+
+    def __level_up(self):
+        """Scales the stats in every up of level"""
+        # TODO: formulate stats that scales in every level up
+        pass
+
+    def add_exp(self, value):
+        self.exp += value
+
+        while self.exp >= self.next_level_exp():
+            # value = next_level_exp(self.level) - value
+            self.exp -= self.next_level_exp()
+            self.__level_up()
 
     def __repr__(self):
         return "<Character(level='{}', exp='{}', current_hp='{}', money='{}')>".format(
