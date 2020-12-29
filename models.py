@@ -187,8 +187,10 @@ class Character(Base):
 
     def __level_up(self):
         """Scales the stats in every up of level"""
-        # TODO: formulate stats that scales in every level up
-        pass
+        stat_growth = 1.5
+        self.level += 1
+        self.strength += floor(stat_growth * self.level)
+        self.defense += floor(stat_growth * self.level)
 
     def add_exp(self, value):
         self.exp += value

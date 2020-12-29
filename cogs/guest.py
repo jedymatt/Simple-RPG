@@ -1,14 +1,15 @@
 from discord.ext import commands
 from models import Character
 from models import User
-import discord
-from util import rng
-from bot import Bot
+from cogs.utils import rng
+from db import session
 
+
+# TODO: add task to commit every 5 minutes or so, check 'confirm' method
 
 class Register(commands.Cog):
 
-    def __init__(self, bot: Bot):
+    def __init__(self, bot):
         self.bot = bot
         self.users = {}
 
@@ -28,7 +29,9 @@ class Register(commands.Cog):
         result = rng.die()
         user = User(discord_id=ctx.author.id, init_roll=result)
         self.users[ctx.author.id] = user
-        self.bot.session.add(user)
+
+        session.add(user)
+
         await ctx.send(str(user))
 
     @commands.command()
@@ -44,7 +47,7 @@ class Register(commands.Cog):
         user.character = character
 
         user.character.current_hp = user.character.max_hp
-        self.bot.session.commit()
+        session.commit()
 
         await ctx.send(str(character))
 
