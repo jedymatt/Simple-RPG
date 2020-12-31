@@ -220,7 +220,7 @@ class ItemType(Base):
     __tablename__ = 'item_types'
 
     _id = Column('id', Integer, primary_key=True)
-    name = Column(String(10), unique=True)
+    name = Column(String(20), unique=True)
 
     items = relationship('Item', back_populates='item_type')
 
@@ -236,7 +236,7 @@ class Item(Base):
 
     _id = Column('id', Integer, primary_key=True)
     _item_type_id = Column('item_type_id', Integer, ForeignKey('item_types.id'))
-    name = Column(String(10), unique=True)
+    name = Column(String(20), unique=True)
     description = Column(Text)
     duration = Column(Interval, default=timedelta())
 
@@ -550,3 +550,7 @@ class ItemPlan(Base):
 
     item = relationship('Item', uselist=False)
     materials = relationship('PlanMaterial', secondary=item_plan_materials)
+
+    def __repr__(self):
+        if self.item:
+            return f"Itemplan(item='{self.item.name}')'"
