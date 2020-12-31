@@ -11,7 +11,7 @@ from math import floor
 
 """Character automated HP generation variables"""
 HP_GEN_AMOUNT = 10
-HP_GEN_INTERVAL = 600  # 600 seconds is 10 equivalent to 10 minutes
+HP_GEN_INTERVAL = 600  # 600 seconds is equivalent to 10 minutes
 
 Base = declarative_base()
 
@@ -282,7 +282,7 @@ class ShopType(Base):
     __tablename__ = 'shop_types'
 
     _id = Column('id', Integer, primary_key=True)
-    name = Column(String(10), unique=True)
+    name = Column(String(20), unique=True)
 
     def __repr__(self):
         return "<ShopType(name='{}')>".format(
@@ -358,7 +358,7 @@ class Location(Base):
     __tablename__ = 'locations'
 
     _id = Column('id', Integer, primary_key=True)
-    name = Column(String(10), unique=True)
+    name = Column(String(20), unique=True)
     description = Column(Text)
 
     characters = relationship('Character', secondary=character_location, back_populates='location')
@@ -381,7 +381,7 @@ class EntityType(Base):
     __tablename__ = 'entity_types'
 
     _id = Column('id', Integer, primary_key=True)
-    name = Column(String(10), unique=True)
+    name = Column(String(20), unique=True)
 
     entities = relationship('Entity', back_populates='entity_type')
 
@@ -399,7 +399,7 @@ class Entity(Base):
     _entity_type_id = Column('entity_type_id', Integer, ForeignKey('entity_types.id'))
     level = Column(Integer)
     _current_hp = Column('current_hp', Integer)
-    name = Column(String(10), unique=True)
+    name = Column(String(20), unique=True)
     description = Column(Text)
 
     entity_type = relationship('EntityType', back_populates='entities', uselist=False)
@@ -513,7 +513,40 @@ class CharacterCompanion(Base):
     action_duration = Column(Interval)
     action_started = Column(DateTime)
 
+    entity = relationship('Entity', uselist=False)
+
     def __repr__(self):
         return "<CharacterCompanion(main='{}', apply_attribute='{}', action_duration='{}', action_started='')>".format(
             self.main, self.apply_attribute, self.action_duration, self.action_started
         )
+
+
+# Done
+item_plan_materials = Table(
+    'item_plan_materials',
+    Base.metadata,
+    Column('item_plan_id', Integer, ForeignKey('item_plans.id'), primary_key=True),
+    Column('plan_material_id', Integer, ForeignKey('plan_materials.id'), primary_key=True)
+)
+
+
+# Done
+class PlanMaterial(Base):
+    __tablename__ = 'plan_materials'
+
+    _id = Column('id', Integer, primary_key=True)
+    _item_id = Column('item_id', Integer, ForeignKey('items.id'))
+    amount = Column(Integer)
+
+    item = relationship('Item', uselist=False)
+
+
+# Done
+class ItemPlan(Base):
+    __tablename__ = 'item_plans'
+
+    _id = Column('id', Integer, primary_key=True)
+    _item_id = Column('item_id', Integer, ForeignKey('items.id'))
+
+    item = relationship('Item', uselist=False)
+    materials = relationship('PlanMaterial', secondary=item_plan_materials)

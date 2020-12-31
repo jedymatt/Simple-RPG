@@ -51,6 +51,10 @@ class Adventurer(commands.Cog):
         """Go to another place"""
         pass
 
+    @commands.command()
+    async def craft(self, arg):
+        pass
+
     @commands.command(aliases=['loc', 'location', 'locations', 'place'])
     async def places(self, ctx: commands.Context):
         """Show places"""
