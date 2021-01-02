@@ -241,6 +241,7 @@ class Item(Base):
     duration = Column(Interval, default=timedelta())
 
     item_type = relationship('ItemType', back_populates='items', uselist=False)
+    item_plan = relationship('ItemPlan', back_populates='item', uselist=False)
     attribute = relationship('Attribute', secondary=item_attribute, uselist=False)
 
     def __repr__(self):
@@ -548,9 +549,5 @@ class ItemPlan(Base):
     _id = Column('id', Integer, primary_key=True)
     _item_id = Column('item_id', Integer, ForeignKey('items.id'))
 
-    item = relationship('Item', uselist=False)
+    item = relationship('Item', back_populates='item_plan', uselist=False)
     materials = relationship('PlanMaterial', secondary=item_plan_materials)
-
-    def __repr__(self):
-        if self.item:
-            return f"Itemplan(item='{self.item.name}')'"
