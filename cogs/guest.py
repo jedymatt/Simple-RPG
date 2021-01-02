@@ -26,11 +26,18 @@ class Register(commands.Cog):
         Args:
             ctx:
         """
-        result = rng.die()
-        user = User(discord_id=ctx.author.id, init_roll=result)
-        self.users[ctx.author.id] = user
 
-        session.add(user)
+        result = rng.die()
+
+        if ctx.author.id not in self.users:  # if user is not in dictionary, then create User object
+            user = User(discord_id=ctx.author.id, init_roll=result)
+            self.users[ctx.author.id] = user
+            session.add(user)
+        else:  # else modify the init_roll
+            user = self.users[ctx.author.id]
+            user.init_roll = result
+
+        session.commit()
 
         await ctx.send(str(user))
 
