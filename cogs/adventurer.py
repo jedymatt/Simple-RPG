@@ -119,13 +119,18 @@ class Adventurer(commands.Cog):
                                 origin.amount = char_items[origin_name]
                                 del char_items[origin_name]
 
-                    if item_plan.item not in character.items:
+                    item_exists = False
+                    index = 0
+                    for index, c_item in enumerate(character.items):
+                        print(c_item)
+                        if item_plan.item.name == c_item.item.name:
+                            item_exists = True
+                            break
+
+                    if not item_exists:
                         character.items.append(CharacterItem(item=item_plan.item, amount=1))
                     else:
-                        # search the existing item
-                        for c_item in character.items:
-                            if c_item.item.name == item_plan.item.name:
-                                c_item.amount += 1
+                        character.items[index].amount += 1
 
     @commands.command(aliases=['loc', 'location', 'locations', 'place'])
     async def places(self, ctx: commands.Context):
@@ -226,7 +231,7 @@ class Adventurer(commands.Cog):
         """Show list of items"""
         author_id = ctx.author.id
 
-        character = query_character(author_id)
+        character = self.characters[author_id]
 
         string_items = '\n'.join([f"{char_item.amount} {char_item.item.name}" for char_item in character.items])
 
