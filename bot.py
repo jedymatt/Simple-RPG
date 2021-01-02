@@ -3,11 +3,10 @@ from db import engine
 import os
 import discord
 from discord.ext import commands
-from models import User, Character
 
 
 def main():
-    bot = commands.Bot(command_prefix='.')
+    bot = commands.Bot(command_prefix='.', case_insensitive=True)
 
     @bot.event
     async def on_ready():
