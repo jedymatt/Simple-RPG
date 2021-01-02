@@ -1,5 +1,5 @@
 from discord.ext import commands
-from models import Character, User, Location
+from models import Character, User, Location, ItemPlan, CharacterItem
 from db import session
 import discord
 from cogs.utils.errors import CharacterNotFound
@@ -33,6 +33,7 @@ class Adventurer(commands.Cog):
         self.bot = bot
         self.characters = {}
         self.locations = None
+        self.item_plans = None
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -41,6 +42,9 @@ class Adventurer(commands.Cog):
 
         print('Locations loaded:', end=' ')
         print([location.name for location in self.locations])
+
+        self.item_plans = session.query(ItemPlan).all()
+        print('Item plans loaded')
 
     @commands.command()
     async def attack(self, ctx):
@@ -51,9 +55,77 @@ class Adventurer(commands.Cog):
         """Go to another place"""
         pass
 
+    @commands.command(aliases=['plan'])
+    async def item_plan(self, ctx):
+        """Show list of craftable items"""
+
+        embed = discord.Embed(
+            title='Craft',
+            colour=discord.Colour.purple()
+        )
+
+        embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
+
+        for item_plan in self.item_plans:
+            str_materials = ', '.join([f"{mat.amount} {mat.item.name}" for mat in item_plan.materials])
+
+            embed.add_field(
+                name=item_plan.item.name,
+                value=str_materials
+            )
+
+        await ctx.send(embed=embed)
+
+    # TODO: Continue craft command
     @commands.command()
-    async def craft(self, arg):
-        pass
+    async def craft(self, ctx, *, arg: str):
+        item = arg.lower()
+        author_id = ctx.author.id
+
+        character = self.characters[author_id]
+
+        for item_plan in self.item_plans:
+            item_plan_name = str(item_plan.item.name).lower()
+
+            if item == item_plan_name:  # check if item is in the item plan
+
+                mats = {}  # create dictionary for the materials
+                for mat in item_plan.materials:
+                    mats[mat.item.name] = mat.amount
+
+                char_items = {}  # create dictionary for the character items
+                for c_item in character.items:
+                    char_items[c_item.item.name] = c_item.amount
+
+                print('mats:', mats)
+                print('char_items:', char_items)
+
+                # check the items of the character has the mats
+                if all(key in char_items for key in mats.keys()):
+                    for name in mats:
+                        char_amount = char_items.get(name)
+
+                        if char_amount < mats[name]:  # check if character item amount is less than the required amount
+                            raise ValueError('Required amount is not enough')  # ValueError is temporary
+
+                        # deduct amount from the required amount
+                        char_items[name] -= mats[name]
+
+                    # after traversing the mats, insert remaining amounts of the character's item
+                    while char_items:  # char_items is not empty
+                        for origin in character.items:
+                            origin_name = origin.item.name
+                            if origin_name in char_items:
+                                origin.amount = char_items[origin_name]
+                                del char_items[origin_name]
+
+                    if item_plan.item not in character.items:
+                        character.items.append(CharacterItem(item=item_plan.item, amount=1))
+                    else:
+                        # search the existing item
+                        for c_item in character.items:
+                            if c_item.item.name == item_plan.item.name:
+                                c_item.amount += 1
 
     @commands.command(aliases=['loc', 'location', 'locations', 'place'])
     async def places(self, ctx: commands.Context):
@@ -148,6 +220,17 @@ class Adventurer(commands.Cog):
     @commands.command()
     async def daily(self, ctx):
         """Claim daily rewards, if already claimed show remaining time until next reward"""
+
+    @commands.command()
+    async def items(self, ctx):
+        """Show list of items"""
+        author_id = ctx.author.id
+
+        character = query_character(author_id)
+
+        string_items = '\n'.join([f"{char_item.amount} {char_item.item.name}" for char_item in character.items])
+
+        await ctx.send(string_items)
 
 
 def setup(bot):
