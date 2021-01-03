@@ -523,20 +523,12 @@ class CharacterCompanion(Base):
 
 
 # Done
-item_plan_materials = Table(
-    'item_plan_materials',
-    Base.metadata,
-    Column('item_plan_id', Integer, ForeignKey('item_plans.id'), primary_key=True),
-    Column('plan_material_id', Integer, ForeignKey('plan_materials.id'), primary_key=True)
-)
-
-
-# Done
 class PlanMaterial(Base):
     __tablename__ = 'plan_materials'
 
     _id = Column('id', Integer, primary_key=True)
     _item_id = Column('item_id', Integer, ForeignKey('items.id'))
+    _item_plan_id = Column('item_plan_id', Integer, ForeignKey('item_plans.id'))
     amount = Column(Integer)
 
     item = relationship('Item', uselist=False)
@@ -550,4 +542,4 @@ class ItemPlan(Base):
     _item_id = Column('item_id', Integer, ForeignKey('items.id'))
 
     item = relationship('Item', back_populates='item_plan', uselist=False)
-    materials = relationship('PlanMaterial', secondary=item_plan_materials)
+    materials = relationship('PlanMaterial')
