@@ -46,14 +46,26 @@ class Adventurer(commands.Cog):
         self.item_plans = session.query(ItemPlan).all()
         print('Item plans loaded')
 
+        # temporary, load characters
+        list_chars = session.query(Character).all()
+        for char in list_chars:
+            self.characters[char.user.discord_id] = char
+
     @commands.command()
     async def attack(self, ctx):
         pass
 
     @commands.command()
-    async def goto(self, ctx, arg):
+    async def goto(self, ctx, *, location_name: str):
         """Go to another place"""
-        pass
+        author_id = ctx.author.id
+        character = self.characters[author_id]
+
+        location_name = location_name.lower()
+
+        for location in self.locations:
+            if location_name == str(location.name).lower():
+                character.location = location
 
     @commands.command(aliases=['plan', 'plans'])
     async def item_plan(self, ctx):
@@ -77,7 +89,6 @@ class Adventurer(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    # TODO: Continue craft command
     @commands.command()
     async def craft(self, ctx, *, arg: str):
         item = arg.lower()
@@ -142,9 +153,11 @@ class Adventurer(commands.Cog):
 
         # _embed.set_thumbnail(url= map thumbnail)
 
+        char = self.characters[ctx.author.id]
+
         embed.add_field(
             name="Current Location",
-            value='# TODO: get character\'s location',
+            value=str(char.location.name if char.location else 'None'),
             inline=False
         )
 
@@ -171,8 +184,8 @@ class Adventurer(commands.Cog):
         """Show profile"""
         user_id = ctx.author.id
 
-        if user_id not in self.characters:
-            self.characters[user_id] = query_character(user_id)
+        # if user_id not in self.characters:
+        #     self.characters[user_id] = query_character(user_id)
 
         character = self.characters[user_id]
 
