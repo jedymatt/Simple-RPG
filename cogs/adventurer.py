@@ -247,6 +247,19 @@ class Adventurer(commands.Cog):
 
         await ctx.send(string_items)
 
+    @commands.command()
+    async def shop(self, ctx):
+        """Shows list of items in the shop"""
+
+    @commands.command()
+    async def buy(self, ctx, *, item_name: str):
+        pass
+
+    @buy.error
+    async def buy_error(self, ctx, error):
+        if isinstance(error, commands.MissingRequiredArgument):
+            await self.shop(ctx)
+
 
 def setup(bot):
     bot.add_cog(Adventurer(bot))
