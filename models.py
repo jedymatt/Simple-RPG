@@ -237,6 +237,8 @@ class Item(Base):
     _id = Column('id', Integer, primary_key=True)
     _item_type_id = Column('item_type_id', Integer, ForeignKey('item_types.id'))
     name = Column(String(20), unique=True)
+    is_sellable = Column(Boolean)
+    money_value = Column(Integer)
     description = Column(Text)
     duration = Column(Interval, default=timedelta())
 
@@ -258,57 +260,20 @@ class CharacterItem(Base):
 
     _character_id = Column('character_id', Integer, ForeignKey('characters.id'), primary_key=True)
     _item_id = Column('item_id', Integer, ForeignKey('items.id'), primary_key=True)
-    amount = Column(Integer)
 
     character = relationship('Character', back_populates='items', uselist=False)
     item = relationship('Item')
 
-    def __repr__(self):
-        return "<CharacterItem(item='{}', amount='{}')>".format(
-            self.item, self.amount
-        )
-
-
-# NOT CONNECTED TO THE CHARACTER
-# DONE
-class ShopType(Base):
-    """
-    ShopType class
-
-    Types:
-        Common
-        Exclusive
-    """
-
-    __tablename__ = 'shop_types'
-
-    _id = Column('id', Integer, primary_key=True)
-    name = Column(String(20), unique=True)
+    @hybrid_property
+    def name(self):
+        if self.item:
+            return self.item.name
+        else:
+            None
 
     def __repr__(self):
-        return "<ShopType(name='{}')>".format(
-            self.name
-        )
-
-
-# NOT CONNECTED TO THE CHARACTER
-# DONE
-class ShopItem(Base):
-    """ShopItem class"""
-
-    __tablename__ = 'shop_items'
-
-    _id = Column('id', Integer, primary_key=True)
-    _item_id = Column('item_id', Integer, ForeignKey('items.id'))
-    _shop_type_id = Column('shop_type_id', Integer, ForeignKey('shop_types.id'))
-    cost = Column(Integer)
-
-    item = relationship('Item', uselist=False)
-    type = relationship('ShopType', uselist=False)
-
-    def __repr__(self):
-        return "<ShopItem(item='{}',cost='{}')>".format(
-            self.item, self.cost
+        return "<CharacterItem(item='{}', name='{}')>".format(
+            self.item, self.name
         )
 
 
