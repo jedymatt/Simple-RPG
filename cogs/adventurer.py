@@ -55,7 +55,7 @@ class Adventurer(commands.Cog):
         """Go to another place"""
         pass
 
-    @commands.command(aliases=['plan'])
+    @commands.command(aliases=['plan', 'plans'])
     async def item_plan(self, ctx):
         """Show list of craftable items"""
 
@@ -67,11 +67,12 @@ class Adventurer(commands.Cog):
         embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
 
         for item_plan in self.item_plans:
-            str_materials = ', '.join([f"{mat.amount} {mat.item.name}" for mat in item_plan.materials])
+            str_materials = '\n'.join([f"{mat.amount} {mat.item.name}" for mat in item_plan.materials])
 
             embed.add_field(
                 name=item_plan.item.name,
-                value=str_materials
+                value=str_materials,
+                inline=False
             )
 
         await ctx.send(embed=embed)
@@ -97,9 +98,6 @@ class Adventurer(commands.Cog):
                 for c_item in character.items:
                     char_items[c_item.item.name] = c_item.amount
 
-                print('mats:', mats)
-                print('char_items:', char_items)
-
                 # check the items of the character has the mats
                 if all(key in char_items for key in mats.keys()):
                     for name in mats:
@@ -122,7 +120,6 @@ class Adventurer(commands.Cog):
                     item_exists = False
                     index = 0
                     for index, c_item in enumerate(character.items):
-                        print(c_item)
                         if item_plan.item.name == c_item.item.name:
                             item_exists = True
                             break
