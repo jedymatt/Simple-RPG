@@ -241,14 +241,15 @@ class Item(Base):
     money_value = Column(Integer)
     description = Column(Text)
     duration = Column(Interval, default=timedelta())
+    in_shop = Column(Boolean)
 
     item_type = relationship('ItemType', back_populates='items', uselist=False)
     item_plan = relationship('ItemPlan', back_populates='item', uselist=False)
     attribute = relationship('Attribute', secondary=item_attribute, uselist=False)
 
     def __repr__(self):
-        return "<Item(name='{}', description='{}', duration='{}')>".format(
-            self.name, self.description, self.duration
+        return "<Item(name='{}', is_sellable='{}', money_value='{}', description='{}', duration='{}' , in_shop='{}')>".format(
+            self.name, self.is_sellable, self.money_value, self.description, self.duration, self.in_shop
         )
 
 
@@ -260,6 +261,7 @@ class CharacterItem(Base):
 
     _character_id = Column('character_id', Integer, ForeignKey('characters.id'), primary_key=True)
     _item_id = Column('item_id', Integer, ForeignKey('items.id'), primary_key=True)
+    amount = Column(Integer)
 
     character = relationship('Character', back_populates='items', uselist=False)
     item = relationship('Item')
@@ -325,6 +327,7 @@ class Location(Base):
 
     _id = Column('id', Integer, primary_key=True)
     name = Column(String(20), unique=True)
+    level_unlock = Column(Integer)
     description = Column(Text)
 
     characters = relationship('Character', secondary=character_location, back_populates='location')

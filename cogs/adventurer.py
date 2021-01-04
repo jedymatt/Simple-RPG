@@ -1,5 +1,5 @@
 from discord.ext import commands
-from models import Character, User, Location, ItemPlan, CharacterItem
+from models import Character, User, Location, ItemPlan, CharacterItem, Item
 from db import session
 import discord
 from cogs.utils.errors import CharacterNotFound
@@ -34,6 +34,7 @@ class Adventurer(commands.Cog):
         self.characters = {}
         self.locations = None
         self.item_plans = None
+        self.shop_items = None
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -50,6 +51,10 @@ class Adventurer(commands.Cog):
         list_chars = session.query(Character).all()
         for char in list_chars:
             self.characters[char.user.discord_id] = char
+
+        # load shop items
+        self.shop_items = session.query(Item).filter(Item.in_shop == 1).order_by(Item.money_value.asc()).all()
+        print(self.shop_items)
 
     @commands.command()
     async def attack(self, ctx):
@@ -250,10 +255,35 @@ class Adventurer(commands.Cog):
     @commands.command()
     async def shop(self, ctx):
         """Shows list of items in the shop"""
+        shop_items_string = '\n'.join([f"{item.name} cost:{item.money_value}" for item in self.shop_items])
+
+        await ctx.send(shop_items_string)
 
     @commands.command()
     async def buy(self, ctx, *, item_name: str):
-        pass
+        item_name = item_name.lower()
+        character = self.characters[ctx.author.id]
+
+        for shop_item in self.shop_items:
+
+            if item_name == str(shop_item.name).lower():
+                if character.money > shop_item.money_value:
+                    character.money -= shop_item.money_value
+
+                # check if item to be added is already in the character.items
+                item_exists = False
+                index = 0
+                for index, s_item in enumerate(character.items):
+                    if item_name == s_item.name:
+                        item_exists = True
+                        break
+
+                if not item_exists:
+                    character.items.append(CharacterItem(item=shop_item, amount=1))
+                else:
+                    character.items[index].amount += 1
+
+        # if loop ended item is not found, should raise error
 
     @buy.error
     async def buy_error(self, ctx, error):
