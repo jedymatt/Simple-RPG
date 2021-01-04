@@ -2,7 +2,7 @@ from discord.ext import commands
 from models import Character, User, Location, ItemPlan, CharacterItem, Item
 from db import session
 import discord
-from cogs.utils.errors import CharacterNotFound
+from cogs.utils.errors import CharacterNotFound, InvalidAmount, ItemNotFound, InsufficientAmount, InsufficientItem
 
 
 def query_character(user_id):
@@ -19,12 +19,46 @@ def query_character(user_id):
          CharacterNotFound: If the character is not found in the database
     """
 
-    result = session.query(Character).filter(User.discord_id == user_id).first()
+    result = session.query(Character).filter(User.discord_id == user_id).one()
 
     if result is None:
         raise CharacterNotFound('Character not found in the database.')
 
     return result
+
+
+def get_item(item_name: str, items):
+    for item in items:
+        if item_name.lower() == str(item.name).lower():
+            return item
+
+    return None
+
+
+def split_str_int(arg: str):
+    """
+
+    Splits the string into new string and integer.
+    Default integer is 1 if not specified.
+
+    Args:
+        arg: string with any content followed by integer
+
+    Returns: string and integer
+    """
+    arg = arg.split(' ')
+    size = len(arg)
+
+    integer = arg[size - 1]
+
+    try:
+        integer = int(integer)
+        string = ' '.join(arg[:size - 1])
+    except ValueError:
+        integer = 1
+        string = ' '.join(arg)
+
+    return string, integer
 
 
 class Adventurer(commands.Cog):
@@ -101,49 +135,46 @@ class Adventurer(commands.Cog):
 
         character = self.characters[author_id]
 
-        for item_plan in self.item_plans:
-            item_plan_name = str(item_plan.item.name).lower()
+        item_plan: ItemPlan = get_item(item, self.item_plans)
 
-            if item == item_plan_name:  # check if item is in the item plan
+        if item_plan:
 
-                mats = {}  # create dictionary for the materials
-                for mat in item_plan.materials:
-                    mats[mat.item.name] = mat.amount
+            plan_mats = {}  # create dictionary for the materials
+            for mat in item_plan.materials:
+                plan_mats[mat.name] = mat.amount
 
-                char_items = {}  # create dictionary for the character items
-                for c_item in character.items:
-                    char_items[c_item.item.name] = c_item.amount
+            char_items = {}  # create dictionary for the character items
+            for c_item in character.items:
+                char_items[c_item.name] = c_item.amount
 
-                # check the items of the character has the mats
-                if all(key in char_items for key in mats.keys()):
-                    for name in mats:
-                        char_amount = char_items.get(name)
+            if all(key in char_items for key in plan_mats.keys()):
+                for name in plan_mats:
+                    char_amount = char_items[name]
 
-                        if char_amount < mats[name]:  # check if character item amount is less than the required amount
-                            raise ValueError('Required amount is not enough')  # ValueError is temporary
+                    if char_amount < plan_mats[name]:  # check if character item amount is less than the required amount
+                        raise InsufficientAmount('Required amount is not enough')
 
-                        # deduct amount from the required amount
-                        char_items[name] -= mats[name]
+                    # deduct amount from the required amount
+                    char_items[name] -= plan_mats[name]
 
-                    # after traversing the mats, insert remaining amounts of the character's item
-                    while char_items:  # char_items is not empty
-                        for origin in character.items:
-                            origin_name = origin.item.name
-                            if origin_name in char_items:
-                                origin.amount = char_items[origin_name]
-                                del char_items[origin_name]
+                # after traversing the mats, copy remaining amounts of char_items to the character.items
+                while char_items:  # char_items is not empty
+                    for c_item in character.items:
+                        name = c_item.item.name
+                        if name in char_items:
+                            c_item.amount = char_items[name]
+                            del char_items[name]
 
-                    item_exists = False
-                    index = 0
-                    for index, c_item in enumerate(character.items):
-                        if item_plan.item.name == c_item.item.name:
-                            item_exists = True
-                            break
+                item = get_item(item_plan.name, character.items)
+                if item:
+                    item.amount += 1
+                else:
+                    character.items.append(CharacterItem(item=item_plan.item, amount=1))
 
-                    if not item_exists:
-                        character.items.append(CharacterItem(item=item_plan.item, amount=1))
-                    else:
-                        character.items[index].amount += 1
+            else:
+                raise InsufficientItem('not enough materials')
+        else:
+            raise ItemNotFound('invalid item')
 
     @commands.command(aliases=['loc', 'location', 'locations', 'place'])
     async def places(self, ctx: commands.Context):
@@ -260,35 +291,54 @@ class Adventurer(commands.Cog):
         await ctx.send(shop_items_string)
 
     @commands.command()
-    async def buy(self, ctx, *, item_name: str):
-        item_name = item_name.lower()
+    async def buy(self, ctx, *, item_name_amount: str):
+
+        item_name, item_amount = split_str_int(item_name_amount)
+
+        # if amount is not valid throw an error
+        if item_amount <= 0:
+            raise InvalidAmount('Amount reached zero or below zero.')
+
+        # get user's character
         character = self.characters[ctx.author.id]
 
-        for shop_item in self.shop_items:
+        shop_item = get_item(item_name, self.shop_items)
 
-            if item_name == str(shop_item.name).lower():
-                if character.money > shop_item.money_value:
-                    character.money -= shop_item.money_value
+        if shop_item:
+            total_cost = shop_item.money_value * item_amount
 
-                # check if item to be added is already in the character.items
-                item_exists = False
-                index = 0
-                for index, s_item in enumerate(character.items):
-                    if item_name == s_item.name:
-                        item_exists = True
-                        break
+            # check if money is enough before making transaction
+            if total_cost > character.money:
+                raise ValueError(f"Not enough money to buy '{item_name}'")
 
-                if not item_exists:
-                    character.items.append(CharacterItem(item=shop_item, amount=1))
-                else:
-                    character.items[index].amount += 1
+            # Deduct money
+            character.money -= total_cost
 
-        # if loop ended item is not found, should raise error
+            # check if item to be added is already in the character.items otherwise create object
+            item = get_item(item_name, character.items)
+            if item:
+                item.amount += item_amount
+            else:
+                character.items.append(CharacterItem(item=shop_item, amount=item_amount))
+        else:
+            raise ItemNotFound
+
+        await ctx.send('item added to inventory, new balance: {}'.format(character.money))
 
     @buy.error
     async def buy_error(self, ctx, error):
         if isinstance(error, commands.MissingRequiredArgument):
             await self.shop(ctx)
+
+        if isinstance(error, InvalidAmount):
+            await ctx.send('invalid amount')
+
+        if isinstance(error, ItemNotFound):
+            await ctx.send('invalid item')
+
+    @commands.command()
+    async def sell(self, ctx, *, item_name_amount: str):
+        pass
 
 
 def setup(bot):

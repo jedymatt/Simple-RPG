@@ -501,6 +501,13 @@ class PlanMaterial(Base):
 
     item = relationship('Item', uselist=False)
 
+    @hybrid_property
+    def name(self):
+        if self.item:
+            return self.item.name
+        else:
+            return None
+
 
 # Done
 class ItemPlan(Base):
@@ -511,3 +518,10 @@ class ItemPlan(Base):
 
     item = relationship('Item', back_populates='item_plan', uselist=False)
     materials = relationship('PlanMaterial')
+
+    @hybrid_property
+    def name(self):
+        if self.item:
+            return self.item.name
+        else:
+            return None
