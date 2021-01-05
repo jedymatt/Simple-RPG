@@ -3,6 +3,7 @@ from models import Character, User, Location, ItemPlan, CharacterItem, Item
 from db import session
 import discord
 from cogs.utils.errors import CharacterNotFound, InvalidAmount, ItemNotFound, InsufficientAmount, InsufficientItem
+from cogs.utils.errors import ItemNotSellable
 
 
 def query_character(user_id):
@@ -95,6 +96,10 @@ class Adventurer(commands.Cog):
         pass
 
     @commands.command()
+    async def duel(self, ctx, mentioned_user):
+        pass
+
+    @commands.command()
     async def goto(self, ctx, *, location_name: str):
         """Go to another place"""
         author_id = ctx.author.id
@@ -160,7 +165,7 @@ class Adventurer(commands.Cog):
                 # after traversing the mats, copy remaining amounts of char_items to the character.items
                 while char_items:  # char_items is not empty
                     for c_item in character.items:
-                        name = c_item.item.name
+                        name = c_item.name
                         if name in char_items:
                             c_item.amount = char_items[name]
                             del char_items[name]
@@ -338,7 +343,58 @@ class Adventurer(commands.Cog):
 
     @commands.command()
     async def sell(self, ctx, *, item_name_amount: str):
-        pass
+
+        item_name, item_amount = split_str_int(item_name_amount)
+
+        # if amount is not valid throw an error
+        if item_amount <= 0:
+            raise InvalidAmount('Amount reached zero or below zero.')
+
+        character = self.characters[ctx.author.id]
+
+        char_item: CharacterItem = get_item(item_name, character.items)
+
+        if char_item:
+
+            if char_item.item.is_sellable is False:
+                raise ItemNotSellable
+
+            if char_item.amount < item_amount:
+                raise InsufficientAmount
+
+            char_item.amount -= item_amount
+
+            gain = char_item.item.money_value * item_amount
+
+            # total gain is 80% of the calculated gain
+            total_gain = int(gain * 0.8)
+            character.money += total_gain
+
+            await ctx.send('item sold,  gained money: +{}'.format(total_gain))
+        else:
+            raise ItemNotFound
+
+    @sell.error
+    async def sell_error(self, ctx, error):
+        if isinstance(error, commands.MissingRequiredArgument):
+            await ctx.send('item not specified')
+
+        if isinstance(error, InvalidAmount):
+            await ctx.send('invalid amount')
+
+        if isinstance(error, ItemNotFound):
+            await ctx.send('item not found')
+
+        if isinstance(error, ItemNotSellable):
+            await ctx.send('item not sellable')
+
+        if isinstance(error, InsufficientAmount):
+            await ctx.send('item amount is not enough')
+
+    @commands.command()
+    async def commit(self, ctx):
+        session.commit()
+        await ctx.send("committed")
 
 
 def setup(bot):
