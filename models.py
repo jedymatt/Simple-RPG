@@ -207,51 +207,47 @@ class Character(Base):
 
 
 # DONE
-class ItemType(Base):
-    """
-    ItemType class
-
-    Available:
-        consumable,
-        raw,
-        gear
-    """
-
-    __tablename__ = 'item_types'
-
-    _id = Column('id', Integer, primary_key=True)
-    name = Column(String(20), unique=True)
-
-    items = relationship('Item', back_populates='item_type')
-
-    def __repr__(self):
-        return "<ItemType(name='{}')>".format(self.name)
-
-
-# DONE
 class Item(Base):
     """Item class"""
 
     __tablename__ = 'items'
 
-    _id = Column('id', Integer, primary_key=True)
-    _item_type_id = Column('item_type_id', Integer, ForeignKey('item_types.id'))
+    id = Column(Integer, primary_key=True)
     name = Column(String(20), unique=True)
-    is_sellable = Column(Boolean)
-    money_value = Column(Integer)
     description = Column(Text)
-    duration = Column(Interval, default=timedelta())
-    in_shop = Column(Boolean)
+    # is_sellable = Column(Boolean, default=False)
+    # money_value = Column(Integer, default=0)
+    # in_shop = Column(Boolean, default=False)
 
-    item_type = relationship('ItemType', back_populates='items', uselist=False)
     item_plan = relationship('ItemPlan', back_populates='item', uselist=False)
     attribute = relationship('Attribute', secondary=item_attribute, uselist=False)
 
-    def __repr__(self):
-        return "<Item(name='{}', is_sellable='{}', money_value='{}', description='{}', duration='{}' , in_shop='{}')>".format(
-            self.name, self.is_sellable, self.money_value, self.description, self.duration, self.in_shop
-        )
+    type = Column(String(50))
 
+    __mapper_args__ = {
+        'polymorphic_identity': 'item',
+        'polymorphic_on': type
+    }
+
+    def __repr__(self):
+        return "<Item(name='%s', type='%s')>" % (self.name, self.type)
+
+
+class Equipment(Item):
+    __tablename__ = 'equipments'
+
+    id = Column(Integer, ForeignKey('items.id'), primary_key=True)
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'equipment'
+    }
+
+class RawMaterial(Item):
+    __tablename__ = 'raw_materials'
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'equipment'
+    }
 
 # DONE
 class CharacterItem(Base):
