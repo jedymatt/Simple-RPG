@@ -23,3 +23,7 @@ class InsufficientAmount(commands.CheckFailure):
 
 class InsufficientItem(commands.CheckFailure):
     pass
+
+
+class ItemNotSellable(commands.CheckFailure):
+    pass
