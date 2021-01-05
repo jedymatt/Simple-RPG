@@ -16,40 +16,40 @@ HP_GEN_INTERVAL = 600  # 600 seconds is equivalent to 10 minutes
 Base = declarative_base()
 
 """" Association tables """
-character_attribute = Table(
-    'character_attributes',
-    Base.metadata,
-    Column('character_id', ForeignKey('characters.id'), primary_key=True),
-    Column('attribute_id', ForeignKey('attributes.id'), primary_key=True)
-)
-
-character_location = Table(
-    'character_locations',
-    Base.metadata,
-    Column('character_id', ForeignKey('characters.id'), primary_key=True),
-    Column('location_id', ForeignKey('locations.id'), primary_key=True)
-)
-
-item_attribute = Table(
-    'item_attributes',
-    Base.metadata,
-    Column('item_id', ForeignKey('items.id'), primary_key=True),
-    Column('attribute_id', ForeignKey('attributes.id'), primary_key=True)
-)
-
-entity_attribute = Table(
-    'entity_attributes',
-    Base.metadata,
-    Column('entity_id', ForeignKey('entities.id'), primary_key=True),
-    Column('attribute_id', ForeignKey('attributes.id'), primary_key=True)
-)
-
-entity_location = Table(
-    'entity_locations',
-    Base.metadata,
-    Column('entity_id', ForeignKey('entities.id'), primary_key=True),
-    Column('location_id', ForeignKey('locations.id'), primary_key=True)
-)
+# character_attribute = Table(
+#     'character_attributes',
+#     Base.metadata,
+#     Column('character_id', ForeignKey('characters.id'), primary_key=True),
+#     Column('attribute_id', ForeignKey('attributes.id'), primary_key=True)
+# )
+#
+# character_location = Table(
+#     'character_locations',
+#     Base.metadata,
+#     Column('character_id', ForeignKey('characters.id'), primary_key=True),
+#     Column('location_id', ForeignKey('locations.id'), primary_key=True)
+# )
+#
+# item_attribute = Table(
+#     'item_attributes',
+#     Base.metadata,
+#     Column('item_id', ForeignKey('items.id'), primary_key=True),
+#     Column('attribute_id', ForeignKey('attributes.id'), primary_key=True)
+# )
+#
+# entity_attribute = Table(
+#     'entity_attributes',
+#     Base.metadata,
+#     Column('entity_id', ForeignKey('entities.id'), primary_key=True),
+#     Column('attribute_id', ForeignKey('attributes.id'), primary_key=True)
+# )
+#
+# entity_location = Table(
+#     'entity_locations',
+#     Base.metadata,
+#     Column('entity_id', ForeignKey('entities.id'), primary_key=True),
+#     Column('location_id', ForeignKey('locations.id'), primary_key=True)
+# )
 
 """
 
@@ -108,8 +108,6 @@ class Character(Base):
     # attribute = relationship('Attribute', secondary=character_attribute, uselist=False)
     # items = relationship('CharacterItem', back_populates='character')
     # equipments = relationship('CharacterEquipment', back_populates='character')
-    location = relationship('Location', secondary=character_location, back_populates='characters', uselist=False)
-    companions = relationship('CharacterCompanion')
 
     __mapper_args__ = {
         'polymorphic_identity': 'character',
@@ -203,19 +201,6 @@ class Player(Character):
                     self._hp_last_updated = datetime.now()
 
         self._current_hp = value
-
-    @hybrid_property
-    def max_hp(self):
-        if self.attribute:
-            return self.attribute.hp
-        else:
-            return None
-
-    @max_hp.setter
-    def max_hp(self, value):
-        if not self.attribute:
-            self.attribute = Attribute()
-        self.attribute.hp = value
 
     def next_level_exp(self):
         base_exp = 200
