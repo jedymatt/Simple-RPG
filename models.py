@@ -273,6 +273,13 @@ class CharacterItem(Base):
         else:
             None
 
+    @hybrid_property
+    def money_value(self):
+        if self.item:
+            return self.item.money_value
+        else:
+            None
+
     def __repr__(self):
         return "<CharacterItem(item='{}', name='{}')>".format(
             self.item, self.name
