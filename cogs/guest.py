@@ -35,7 +35,7 @@ class Register(commands.Cog):
             session.add(user)
         else:  # else modify the init_roll
             user = self.users[ctx.author.id]
-            user.init_roll = result
+            user.dice_number = result
 
         session.commit()
 
@@ -50,7 +50,7 @@ class Register(commands.Cog):
         """
         user = self.users[ctx.author.id]
         character = Character(level=1, exp=0, money=500)
-        character.attribute = rng.random_attribute(user.init_roll)
+        character.attribute = rng.random_attribute(user.dice_number)
         user.character = character
 
         user.character.current_hp = user.character.max_hp
