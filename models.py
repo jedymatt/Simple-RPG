@@ -1,3 +1,5 @@
+# depreciated
+
 from datetime import datetime, timedelta
 
 from sqlalchemy import Column, Table, Integer, String, Text, BigInteger, ForeignKey, DateTime, Interval, Float, Boolean
@@ -16,40 +18,40 @@ HP_GEN_INTERVAL = 600  # 600 seconds is equivalent to 10 minutes
 Base = declarative_base()
 
 """" Association tables """
-character_attribute = Table(
-    'character_attributes',
-    Base.metadata,
-    Column('character_id', ForeignKey('characters.id'), primary_key=True),
-    Column('attribute_id', ForeignKey('attributes.id'), primary_key=True)
-)
-
+# character_attribute = Table(
+#     'character_attributes',
+#     Base.metadata,
+#     Column('character_id', ForeignKey('characters.id'), primary_key=True),
+#     Column('attribute_id', ForeignKey('attributes.id'), primary_key=True)
+# )
+#
 character_location = Table(
     'character_locations',
     Base.metadata,
     Column('character_id', ForeignKey('characters.id'), primary_key=True),
     Column('location_id', ForeignKey('locations.id'), primary_key=True)
 )
-
-item_attribute = Table(
-    'item_attributes',
-    Base.metadata,
-    Column('item_id', ForeignKey('items.id'), primary_key=True),
-    Column('attribute_id', ForeignKey('attributes.id'), primary_key=True)
-)
-
-entity_attribute = Table(
-    'entity_attributes',
-    Base.metadata,
-    Column('entity_id', ForeignKey('entities.id'), primary_key=True),
-    Column('attribute_id', ForeignKey('attributes.id'), primary_key=True)
-)
-
-entity_location = Table(
-    'entity_locations',
-    Base.metadata,
-    Column('entity_id', ForeignKey('entities.id'), primary_key=True),
-    Column('location_id', ForeignKey('locations.id'), primary_key=True)
-)
+#
+# item_attribute = Table(
+#     'item_attributes',
+#     Base.metadata,
+#     Column('item_id', ForeignKey('items.id'), primary_key=True),
+#     Column('attribute_id', ForeignKey('attributes.id'), primary_key=True)
+# )
+#
+# entity_attribute = Table(
+#     'entity_attributes',
+#     Base.metadata,
+#     Column('entity_id', ForeignKey('entities.id'), primary_key=True),
+#     Column('attribute_id', ForeignKey('attributes.id'), primary_key=True)
+# )
+#
+# entity_location = Table(
+#     'entity_locations',
+#     Base.metadata,
+#     Column('entity_id', ForeignKey('entities.id'), primary_key=True),
+#     Column('location_id', ForeignKey('locations.id'), primary_key=True)
+# )
 
 """
 
@@ -64,15 +66,15 @@ class User(Base):
 
     __tablename__ = 'users'
 
-    _id = Column('id', Integer, primary_key=True)
+    id = Column(Integer, primary_key=True)
     discord_id = Column(BigInteger, unique=True)
-    init_roll = Column(Integer)
-    _last_online = Column('last_online', DateTime, default=func.now(), onupdate=func.now())
+    dice_number = Column(Integer)
+    last_online = Column(DateTime, default=func.now(), onupdate=func.now())
 
-    character = relationship('Character', back_populates='user', uselist=False)
+    player = relationship('Player', back_populates='user', uselist=False)
 
     def __repr__(self):
-        return "<User(discord_id='{}' init_roll='{}')>".format(self.discord_id, self.init_roll)
+        return "<User(discord_id='%s' init_roll='%s')>" % (self.discord_id, self.dice_number)
 
 
 # DONE
@@ -81,15 +83,13 @@ class Attribute(Base):
 
     __tablename__ = 'attributes'
 
-    _id = Column('id', Integer, primary_key=True)
+    id = Column(Integer, primary_key=True)
     hp = Column(Integer)
     strength = Column(Integer)
     defense = Column(Integer)
 
     def __repr__(self):
-        return "<Attribute(hp='{}', strength='{}', defense='{}')>".format(
-            self.hp, self.strength, self.defense
-        )
+        return "<Attribute(hp='%s', strength='%s', defense='%s')>" % (self.hp, self.strength, self.defense)
 
 
 # DONE
@@ -98,21 +98,23 @@ class Character(Base):
 
     __tablename__ = 'characters'
 
-    _id = Column('id', Integer, primary_key=True)
-    _user_id = Column('user_id', Integer, ForeignKey('users.id'))
+    id = Column(Integer, primary_key=True)
     level = Column(Integer)
     exp = Column(Integer)
-    _current_hp = Column('current_hp', Integer)
-    money = Column(Integer)
-    _hp_last_updated = Column('hp_last_updated', DateTime, default=func.now())
+    current_hp = Column(Integer)
+    # money = Column(Integer)
+    # _hp_last_updated = Column('hp_last_updated', DateTime, default=func.now())
+    type = Column(String(50))
 
-    # relations
-    attribute = relationship('Attribute', secondary=character_attribute, uselist=False)
-    user = relationship('User', back_populates='character', uselist=False)
-    items = relationship('CharacterItem', back_populates='character')
-    equipments = relationship('CharacterEquipment', back_populates='character')
-    location = relationship('Location', secondary=character_location, back_populates='characters', uselist=False)
-    companions = relationship('CharacterCompanion')
+    # attribute = relationship('Attribute', secondary=character_attribute, uselist=False)
+    # items = relationship('CharacterItem', back_populates='character')
+    # equipments = relationship('CharacterEquipment', back_populates='character')
+    location = relationship('Location', secondary=character_location)
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'character',
+        'polymorphic_on': type
+    }
 
     def is_full_hp(self):
         return self.current_hp == self.max_hp
@@ -121,33 +123,11 @@ class Character(Base):
         return self.current_hp > 0
 
     @hybrid_property
-    def current_hp(self):
-        if self._current_hp and self.max_hp:  # if max hp is not None
-            if self._current_hp < self.max_hp:
-                regen = occurrence(self._hp_last_updated, HP_GEN_INTERVAL) * HP_GEN_AMOUNT
-                self._current_hp += regen
-                if self._current_hp > self.max_hp:  # if current hp exceeds the max hp
-                    self._current_hp = self.max_hp  # set the current hp value as max hp
-        return self._current_hp
-
-    @current_hp.setter
-    def current_hp(self, value):
-        if self.max_hp:  # if max hp is not None
-            if value > self.max_hp:
-                raise ValueError('Value exceeds the max_hp')
-
-            if self.is_full_hp():  # condition first if value is full hp
-                if value < self.max_hp:  # condition if the new value is is not full hp
-                    self._hp_last_updated = datetime.now()
-
-        self._current_hp = value
-
-    @hybrid_property
     def max_hp(self):
         if self.attribute:
             return self.attribute.hp
         else:
-            return None
+            None
 
     @max_hp.setter
     def max_hp(self, value):
@@ -181,6 +161,49 @@ class Character(Base):
             self.attribute = Attribute()
         self.attribute.defense = value
 
+    def __repr__(self):
+        return "<Character(level='{}', exp='{}', current_hp='{}', money='{}')>".format(
+            self.level, self.exp, self.current_hp, self.money
+        )
+
+
+class Player(Character):
+    __tablename__ = 'players'
+
+    id = Column(Integer, ForeignKey('characters.id'), primary_key=True)
+    user_id = Column(ForeignKey('users.id'))
+
+    money = Column(Integer)
+    hp_last_updated = Column(DateTime, default=func.now())
+
+    user = relationship('User', back_populates='player', uselist=False)
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'player'
+    }
+
+    @hybrid_property
+    def current_hp(self):
+        if self._current_hp and self.max_hp:  # if max hp is not None
+            if self._current_hp < self.max_hp:
+                regen = occurrence(self._hp_last_updated, HP_GEN_INTERVAL) * HP_GEN_AMOUNT
+                self._current_hp += regen
+                if self._current_hp > self.max_hp:  # if current hp exceeds the max hp
+                    self._current_hp = self.max_hp  # set the current hp value as max hp
+        return self._current_hp
+
+    @current_hp.setter
+    def current_hp(self, value):
+        if self.max_hp:  # if max hp is not None
+            if value > self.max_hp:
+                raise ValueError('Value exceeds the max_hp')
+
+            if self.is_full_hp():  # condition first if value is full hp
+                if value < self.max_hp:  # condition if the new value is is not full hp
+                    self._hp_last_updated = datetime.now()
+
+        self._current_hp = value
+
     def next_level_exp(self):
         base_exp = 200
         return floor(base_exp * (self.level ** 1.2))
@@ -200,33 +223,6 @@ class Character(Base):
             self.exp -= self.next_level_exp()
             self.__level_up()
 
-    def __repr__(self):
-        return "<Character(level='{}', exp='{}', current_hp='{}', money='{}')>".format(
-            self.level, self.exp, self.current_hp, self.money
-        )
-
-
-# DONE
-class ItemType(Base):
-    """
-    ItemType class
-
-    Available:
-        consumable,
-        raw,
-        gear
-    """
-
-    __tablename__ = 'item_types'
-
-    _id = Column('id', Integer, primary_key=True)
-    name = Column(String(20), unique=True)
-
-    items = relationship('Item', back_populates='item_type')
-
-    def __repr__(self):
-        return "<ItemType(name='{}')>".format(self.name)
-
 
 # DONE
 class Item(Base):
@@ -234,23 +230,52 @@ class Item(Base):
 
     __tablename__ = 'items'
 
-    _id = Column('id', Integer, primary_key=True)
-    _item_type_id = Column('item_type_id', Integer, ForeignKey('item_types.id'))
+    id = Column(Integer, primary_key=True)
     name = Column(String(20), unique=True)
-    is_sellable = Column(Boolean)
-    money_value = Column(Integer)
     description = Column(Text)
-    duration = Column(Interval, default=timedelta())
-    in_shop = Column(Boolean)
+    # is_sellable = Column(Boolean, default=False)
+    # money_value = Column(Integer, default=0)
+    # in_shop = Column(Boolean, default=False)
 
-    item_type = relationship('ItemType', back_populates='items', uselist=False)
     item_plan = relationship('ItemPlan', back_populates='item', uselist=False)
-    attribute = relationship('Attribute', secondary=item_attribute, uselist=False)
+    # attribute = relationship('Attribute', secondary=item_attribute, uselist=False)
+
+    type = Column(String(50))
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'item',
+        'polymorphic_on': type
+    }
 
     def __repr__(self):
-        return "<Item(name='{}', is_sellable='{}', money_value='{}', description='{}', duration='{}' , in_shop='{}')>".format(
-            self.name, self.is_sellable, self.money_value, self.description, self.duration, self.in_shop
-        )
+        return "<Item(name='%s', type='%s')>" % (self.name, self.type)
+
+
+class Equipment(Item):
+    __tablename__ = 'equipments'
+
+    id = Column(Integer, ForeignKey('items.id'), primary_key=True)
+    attribute_id = (Integer, ForeignKey('attributes.id'))
+
+    attribute = relationship('Attribute', uselist=False)
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'equipment'
+    }
+
+
+class RawMaterial(Item):
+    __tablename__ = 'raw_materials'
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'raw_material'
+    }
+
+
+class Consumable(Item):
+    __mapper_args__ = {
+        'polymorphic_identity': 'consumable'
+    }
 
 
 # DONE

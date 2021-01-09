@@ -1,12 +1,13 @@
 from discord.ext import commands
-from models import Character, User, Location, ItemPlan, CharacterItem, Item
+# from models import Character, User, Location, ItemPlan, CharacterItem, Item
 from db import session
 import discord
 from cogs.utils.errors import CharacterNotFound, InvalidAmount, ItemNotFound, InsufficientAmount, InsufficientItem
 from cogs.utils.errors import ItemNotSellable
+from disbotrpg import User, Location, ItemPlan, Item, ShopItem, Player, PlayerItem
 
 
-def query_character(user_id):
+def query_player(user_id):
     """
     Finds user's character from database.
 
@@ -20,7 +21,7 @@ def query_character(user_id):
          CharacterNotFound: If the character is not found in the database
     """
 
-    result = session.query(Character).filter(User.discord_id == user_id).one()
+    result = session.query(Player).filter(User.discord_id == user_id).one()
 
     if result is None:
         raise CharacterNotFound('Character not found in the database.')
@@ -30,7 +31,7 @@ def query_character(user_id):
 
 def get_item(item_name: str, items):
     for item in items:
-        if item_name.lower() == str(item.name).lower():
+        if str(item.name).lower() == item_name.lower():
             return item
 
     return None
@@ -66,7 +67,7 @@ class Adventurer(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.characters = {}
+        self.players = {}
         self.locations = None
         self.item_plans = None
         self.shop_items = None
@@ -82,13 +83,13 @@ class Adventurer(commands.Cog):
         self.item_plans = session.query(ItemPlan).all()
         print('Item plans loaded')
 
-        # temporary, load characters
-        list_chars = session.query(Character).all()
-        for char in list_chars:
-            self.characters[char.user.discord_id] = char
+        # temporary: load players
+        players = session.query(Player).all()
+        for player in players:
+            self.players[player.user.discord_id] = player
 
         # load shop items
-        self.shop_items = session.query(Item).filter(Item.in_shop == 1).order_by(Item.money_value.asc()).all()
+        self.shop_items = session.query(ShopItem).order_by(ShopItem.market_value.asc()).all()
         print(self.shop_items)
 
     @commands.command()
@@ -103,13 +104,13 @@ class Adventurer(commands.Cog):
     async def goto(self, ctx, *, location_name: str):
         """Go to another place"""
         author_id = ctx.author.id
-        character = self.characters[author_id]
+        player = self.players[author_id]
 
         location_name = location_name.lower()
 
         for location in self.locations:
             if location_name == str(location.name).lower():
-                character.location = location
+                player.location = location
 
     @commands.command(aliases=['plan', 'plans'])
     async def item_plan(self, ctx):
@@ -138,7 +139,7 @@ class Adventurer(commands.Cog):
         item = arg.lower()
         author_id = ctx.author.id
 
-        character = self.characters[author_id]
+        player = self.players[author_id]
 
         item_plan: ItemPlan = get_item(item, self.item_plans)
 
@@ -148,33 +149,33 @@ class Adventurer(commands.Cog):
             for mat in item_plan.materials:
                 plan_mats[mat.name] = mat.amount
 
-            char_items = {}  # create dictionary for the character items
-            for c_item in character.items:
+            char_items = {}  # create dictionary for the player items
+            for c_item in player.items:
                 char_items[c_item.name] = c_item.amount
 
             if all(key in char_items for key in plan_mats.keys()):
                 for name in plan_mats:
                     char_amount = char_items[name]
 
-                    if char_amount < plan_mats[name]:  # check if character item amount is less than the required amount
+                    if char_amount < plan_mats[name]:  # check if player item amount is less than the required amount
                         raise InsufficientAmount('Required amount is not enough')
 
                     # deduct amount from the required amount
                     char_items[name] -= plan_mats[name]
 
-                # after traversing the mats, copy remaining amounts of char_items to the character.items
+                # after traversing the mats, copy remaining amounts of char_items to the player.items
                 while char_items:  # char_items is not empty
-                    for c_item in character.items:
+                    for c_item in player.items:
                         name = c_item.name
                         if name in char_items:
                             c_item.amount = char_items[name]
                             del char_items[name]
 
-                item = get_item(item_plan.name, character.items)
+                item = get_item(item_plan.target_item.name, player.items)
                 if item:
                     item.amount += 1
                 else:
-                    character.items.append(CharacterItem(item=item_plan.item, amount=1))
+                    player.items.append(PlayerItem(item=item_plan.target_item, amount=1))
 
             else:
                 raise InsufficientItem('not enough materials')
@@ -194,7 +195,7 @@ class Adventurer(commands.Cog):
 
         # _embed.set_thumbnail(url= map thumbnail)
 
-        char = self.characters[ctx.author.id]
+        char = self.players[ctx.author.id]
 
         embed.add_field(
             name="Current Location",
@@ -228,7 +229,7 @@ class Adventurer(commands.Cog):
         # if user_id not in self.characters:
         #     self.characters[user_id] = query_character(user_id)
 
-        character = self.characters[user_id]
+        player = self.players[user_id]
 
         # Embedded format
         embed = discord.Embed(
@@ -243,10 +244,10 @@ class Adventurer(commands.Cog):
             name='Details',
             value="Level: {}\n"
                   "Exp: {} / {}\n"
-                  "Location: {}".format(character.level,
-                                        character.exp,
-                                        character.next_level_exp(),
-                                        character.location.name if character.location else None
+                  "Location: {}".format(player.level,
+                                        player.exp,
+                                        player.next_level_exp(),
+                                        player.location.name if player.location else None
                                         ),
             inline=False
         )
@@ -254,16 +255,16 @@ class Adventurer(commands.Cog):
             name='Stats',
             value="HP: {} / {}\n"
                   "Strength: {}\n"
-                  "Defense: {}".format(character.current_hp,
-                                       character.max_hp,
-                                       character.strength,
-                                       character.defense),
+                  "Defense: {}".format(player.current_hp,
+                                       int(player.max_hp),
+                                       int(player.strength),
+                                       int(player.defense)),
             inline=False
         )
 
         embed.add_field(
             name='Others',
-            value="Money: {}".format(character.money),
+            value="Money: {}".format(player.money),
             inline=False
         )
 
@@ -271,7 +272,7 @@ class Adventurer(commands.Cog):
 
     @commands.command()
     async def heal(self, ctx):
-        """Uses potion on the character's inventory"""
+        """Uses potion on the player's inventory"""
 
     @commands.command()
     async def daily(self, ctx):
@@ -282,9 +283,9 @@ class Adventurer(commands.Cog):
         """Show list of items"""
         author_id = ctx.author.id
 
-        character = self.characters[author_id]
+        player = self.players[author_id]
 
-        string_items = '\n'.join([f"{char_item.amount} {char_item.item.name}" for char_item in character.items])
+        string_items = '\n'.join([f"{char_item.amount} {char_item.item.name}" for char_item in player.items])
 
         await ctx.send(string_items)
 
@@ -304,8 +305,8 @@ class Adventurer(commands.Cog):
         if item_amount <= 0:
             raise InvalidAmount('Amount reached zero or below zero.')
 
-        # get user's character
-        character = self.characters[ctx.author.id]
+        # get user's player
+        player = self.players[ctx.author.id]
 
         shop_item = get_item(item_name, self.shop_items)
 
@@ -313,22 +314,22 @@ class Adventurer(commands.Cog):
             total_cost = shop_item.money_value * item_amount
 
             # check if money is enough before making transaction
-            if total_cost > character.money:
+            if total_cost > player.money:
                 raise ValueError(f"Not enough money to buy '{item_name}'")
 
             # Deduct money
-            character.money -= total_cost
+            player.money -= total_cost
 
             # check if item to be added is already in the character.items otherwise create object
-            item = get_item(item_name, character.items)
+            item = get_item(item_name, player.items)
             if item:
                 item.amount += item_amount
             else:
-                character.items.append(CharacterItem(item=shop_item, amount=item_amount))
+                player.items.append(PlayerItem(item=shop_item, amount=item_amount))
         else:
             raise ItemNotFound
 
-        await ctx.send('item added to inventory, new balance: {}'.format(character.money))
+        await ctx.send('item added to inventory, new balance: {}'.format(player.money))
 
     @buy.error
     async def buy_error(self, ctx, error):
@@ -350,9 +351,9 @@ class Adventurer(commands.Cog):
         if item_amount <= 0:
             raise InvalidAmount('Amount reached zero or below zero.')
 
-        character = self.characters[ctx.author.id]
+        player = self.players[ctx.author.id]
 
-        char_item: CharacterItem = get_item(item_name, character.items)
+        char_item: PlayerItem = get_item(item_name, player.items)
 
         if char_item:
 
@@ -368,7 +369,7 @@ class Adventurer(commands.Cog):
 
             # total gain is 80% of the calculated gain
             total_gain = int(gain * 0.8)
-            character.money += total_gain
+            player.money += total_gain
 
             await ctx.send('item sold,  gained money: +{}'.format(total_gain))
         else:

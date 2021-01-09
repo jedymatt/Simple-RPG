@@ -1,8 +1,7 @@
 from discord.ext import commands
-from models import Character
-from models import User
 from cogs.utils import rng
 from db import session
+from disbotrpg import User, Player, Character
 
 
 # TODO: add task to commit every 5 minutes or so, check 'confirm' method
@@ -30,15 +29,14 @@ class Register(commands.Cog):
         result = rng.die()
 
         if ctx.author.id not in self.users:  # if user is not in dictionary, then create User object
-            user = User(discord_id=ctx.author.id, init_roll=result)
+            user = User(discord_id=ctx.author.id, dice_roll=result)
             self.users[ctx.author.id] = user
             session.add(user)
         else:  # else modify the init_roll
             user = self.users[ctx.author.id]
-            user.init_roll = result
+            user.dice_roll = result
 
         session.commit()
-
         await ctx.send(str(user))
 
     @commands.command()
@@ -49,14 +47,14 @@ class Register(commands.Cog):
             ctx:
         """
         user = self.users[ctx.author.id]
-        character = Character(level=1, exp=0, money=500)
-        character.attribute = rng.random_attribute(user.init_roll)
-        user.character = character
+        player = Player(level=1, exp=0, money=500)
+        player.attribute = rng.random_attribute(user.dice_roll)
+        user.player = player
 
-        user.character.current_hp = user.character.max_hp
+        user.player.current_hp = user.player.max_hp  # set current hp value to max hp
         session.commit()
 
-        await ctx.send(str(character))
+        await ctx.send(str(player))
 
     # @confirm.error
     # async def confirm_error(self, ctx, error):
