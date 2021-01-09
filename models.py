@@ -1,3 +1,5 @@
+# depreciated
+
 from datetime import datetime, timedelta
 
 from sqlalchemy import Column, Table, Integer, String, Text, BigInteger, ForeignKey, DateTime, Interval, Float, Boolean
@@ -23,12 +25,12 @@ Base = declarative_base()
 #     Column('attribute_id', ForeignKey('attributes.id'), primary_key=True)
 # )
 #
-# character_location = Table(
-#     'character_locations',
-#     Base.metadata,
-#     Column('character_id', ForeignKey('characters.id'), primary_key=True),
-#     Column('location_id', ForeignKey('locations.id'), primary_key=True)
-# )
+character_location = Table(
+    'character_locations',
+    Base.metadata,
+    Column('character_id', ForeignKey('characters.id'), primary_key=True),
+    Column('location_id', ForeignKey('locations.id'), primary_key=True)
+)
 #
 # item_attribute = Table(
 #     'item_attributes',
@@ -100,7 +102,6 @@ class Character(Base):
     level = Column(Integer)
     exp = Column(Integer)
     current_hp = Column(Integer)
-    # _current_hp = Column('current_hp', Integer)
     # money = Column(Integer)
     # _hp_last_updated = Column('hp_last_updated', DateTime, default=func.now())
     type = Column(String(50))
@@ -108,6 +109,7 @@ class Character(Base):
     # attribute = relationship('Attribute', secondary=character_attribute, uselist=False)
     # items = relationship('CharacterItem', back_populates='character')
     # equipments = relationship('CharacterEquipment', back_populates='character')
+    location = relationship('Location', secondary=character_location)
 
     __mapper_args__ = {
         'polymorphic_identity': 'character',
@@ -236,7 +238,7 @@ class Item(Base):
     # in_shop = Column(Boolean, default=False)
 
     item_plan = relationship('ItemPlan', back_populates='item', uselist=False)
-    attribute = relationship('Attribute', secondary=item_attribute, uselist=False)
+    # attribute = relationship('Attribute', secondary=item_attribute, uselist=False)
 
     type = Column(String(50))
 

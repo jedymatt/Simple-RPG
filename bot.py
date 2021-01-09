@@ -3,9 +3,12 @@ from db import engine
 import os
 import discord
 from discord.ext import commands
+from disbotrpg import config
 
 
 def main():
+    config.set_hp_regen(10, 600)  # set global variable for Player to regenerate HP
+
     bot = commands.Bot(command_prefix='.', case_insensitive=True)
 
     @bot.event
