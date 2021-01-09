@@ -67,7 +67,6 @@ class Adventurer(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.players = {}
         self.locations = None
         self.item_plans = None
         self.shop_items = None
@@ -82,11 +81,6 @@ class Adventurer(commands.Cog):
 
         self.item_plans = session.query(ItemPlan).all()
         print('Item plans loaded')
-
-        # temporary: load players
-        players = session.query(Player).all()
-        for player in players:
-            self.players[player.user.discord_id] = player
 
         # load shop items
         self.shop_items = session.query(ShopItem).order_by(ShopItem.market_value.asc()).all()
@@ -104,13 +98,15 @@ class Adventurer(commands.Cog):
     async def goto(self, ctx, *, location_name: str):
         """Go to another place"""
         author_id = ctx.author.id
-        player = self.players[author_id]
+        player = query_player(author_id)
 
         location_name = location_name.lower()
 
         for location in self.locations:
             if location_name == str(location.name).lower():
                 player.location = location
+
+        session.commit()
 
     @commands.command(aliases=['plan', 'plans'])
     async def item_plan(self, ctx):
@@ -139,7 +135,7 @@ class Adventurer(commands.Cog):
         item = arg.lower()
         author_id = ctx.author.id
 
-        player = self.players[author_id]
+        player = query_player(author_id)
 
         item_plan: ItemPlan = get_item(item, self.item_plans)
 
@@ -182,6 +178,8 @@ class Adventurer(commands.Cog):
         else:
             raise ItemNotFound('invalid item')
 
+        session.commit()
+
     @commands.command(aliases=['loc', 'location', 'locations', 'place'])
     async def places(self, ctx: commands.Context):
         """Show places"""
@@ -195,7 +193,7 @@ class Adventurer(commands.Cog):
 
         # _embed.set_thumbnail(url= map thumbnail)
 
-        char = self.players[ctx.author.id]
+        char = query_player(ctx.author.id)
 
         embed.add_field(
             name="Current Location",
@@ -229,7 +227,7 @@ class Adventurer(commands.Cog):
         # if user_id not in self.characters:
         #     self.characters[user_id] = query_character(user_id)
 
-        player = self.players[user_id]
+        player = query_player(user_id)
 
         # Embedded format
         embed = discord.Embed(
@@ -283,7 +281,7 @@ class Adventurer(commands.Cog):
         """Show list of items"""
         author_id = ctx.author.id
 
-        player = self.players[author_id]
+        player = query_player(author_id)
 
         string_items = '\n'.join([f"{char_item.amount} {char_item.item.name}" for char_item in player.items])
 
@@ -306,7 +304,7 @@ class Adventurer(commands.Cog):
             raise InvalidAmount('Amount reached zero or below zero.')
 
         # get user's player
-        player = self.players[ctx.author.id]
+        player = query_player(ctx.author.id)
 
         shop_item = get_item(item_name, self.shop_items)
 
@@ -330,6 +328,7 @@ class Adventurer(commands.Cog):
             raise ItemNotFound
 
         await ctx.send('item added to inventory, new balance: {}'.format(player.money))
+        session.commit()
 
     @buy.error
     async def buy_error(self, ctx, error):
@@ -351,7 +350,7 @@ class Adventurer(commands.Cog):
         if item_amount <= 0:
             raise InvalidAmount('Amount reached zero or below zero.')
 
-        player = self.players[ctx.author.id]
+        player = query_player(ctx.author.id)
 
         char_item: PlayerItem = get_item(item_name, player.items)
 
@@ -375,6 +374,8 @@ class Adventurer(commands.Cog):
         else:
             raise ItemNotFound
 
+        session.commit()
+
     @sell.error
     async def sell_error(self, ctx, error):
         if isinstance(error, commands.MissingRequiredArgument):
@@ -391,11 +392,6 @@ class Adventurer(commands.Cog):
 
         if isinstance(error, InsufficientAmount):
             await ctx.send('item amount is not enough')
-
-    @commands.command()
-    async def commit(self, ctx):
-        session.commit()
-        await ctx.send("committed")
 
 
 def setup(bot):
