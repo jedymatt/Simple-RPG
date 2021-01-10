@@ -79,12 +79,16 @@ class Adventurer(commands.Cog):
         print('Locations loaded:', end=' ')
         print([location.name for location in self.locations])
 
-        self.item_plans = session.query(ItemPlan).all()
-        print('Item plans loaded')
-
-        # load shop items
-        self.shop_items = session.query(ShopItem).order_by(ShopItem.market_value.asc()).all()
-        print(self.shop_items)
+        # self.item_plans = session.query(ItemPlan).all()
+        # print('Loaded ItemPlans:')
+        # for item_plan in self.item_plans:
+        #     print(item_plan.item)
+        #
+        # # load shop items
+        # self.shop_items = session.query(ShopItem).all()
+        # print('Loaded ShopItems:')
+        # for shop_item in self.shop_items:
+        #     print(shop_item.item)
 
     @commands.command()
     async def attack(self, ctx):
@@ -108,27 +112,27 @@ class Adventurer(commands.Cog):
 
         session.commit()
 
-    @commands.command(aliases=['plan', 'plans'])
-    async def item_plan(self, ctx):
-        """Show list of craftable items"""
-
-        embed = discord.Embed(
-            title='Craft',
-            colour=discord.Colour.purple()
-        )
-
-        embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
-
-        for item_plan in self.item_plans:
-            str_materials = '\n'.join([f"{mat.amount} {mat.item.name}" for mat in item_plan.materials])
-
-            embed.add_field(
-                name=item_plan.item.name,
-                value=str_materials,
-                inline=False
-            )
-
-        await ctx.send(embed=embed)
+    # @commands.command(aliases=['plan', 'plans'])
+    # async def item_plan(self, ctx):
+        # """Show list of craftable items"""
+        #
+        # embed = discord.Embed(
+        #     title='Craft',
+        #     colour=discord.Colour.purple()
+        # )
+        #
+        # embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
+        #
+        # for item_plan in self.item_plans:
+        #     str_materials = '\n'.join([f"{mat.amount} {mat.item.name}" for mat in item_plan.materials])
+        #
+        #     embed.add_field(
+        #         name=item_plan.item.name,
+        #         value=str_materials,
+        #         inline=False
+        #     )
+        #
+        # await ctx.send(embed=embed)
 
     @commands.command()
     async def craft(self, ctx, *, arg: str):
@@ -167,11 +171,11 @@ class Adventurer(commands.Cog):
                             c_item.amount = char_items[name]
                             del char_items[name]
 
-                item = get_item(item_plan.target_item.name, player.items)
+                item = get_item(item_plan.item.name, player.items)
                 if item:
                     item.amount += 1
                 else:
-                    player.items.append(PlayerItem(item=item_plan.target_item, amount=1))
+                    player.items.append(PlayerItem(item=item_plan.item, amount=1))
 
             else:
                 raise InsufficientItem('not enough materials')

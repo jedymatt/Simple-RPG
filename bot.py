@@ -1,5 +1,5 @@
 from config import BOT_TOKEN
-from db import engine
+from db import engine, session
 import os
 import discord
 from discord.ext import commands
