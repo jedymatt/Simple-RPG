@@ -2,6 +2,7 @@ from discord.ext import commands
 from cogs.utils import rng
 from db import session
 from disbotrpg import User, Player, Character
+from datetime import datetime
 
 
 # TODO: add task to commit every 5 minutes or so, check 'confirm' method
@@ -47,7 +48,7 @@ class Register(commands.Cog):
             ctx:
         """
         user = self.users[ctx.author.id]
-        player = Player(level=1, exp=0, money=500)
+        player = Player(level=1, exp=0, money=500, hp_last_updated=datetime.utcnow())
         player.attribute = rng.random_attribute(user.dice_roll)
         user.player = player
 
