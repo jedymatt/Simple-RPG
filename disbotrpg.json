@@ -1,0 +1,6 @@
+{
+  "hp_regen": {
+    "interval": 600,
+    "amount": 10
+  }
+}

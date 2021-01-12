@@ -1,7 +1,7 @@
 from discord.ext import commands
 from cogs.utils import rng
 from db import session
-from disbotrpg import User, Player, Character
+from disbotrpg import User, Player
 from datetime import datetime
 
 
@@ -37,7 +37,7 @@ class Register(commands.Cog):
             user = self.users[ctx.author.id]
             user.dice_roll = result
 
-        session.commit()
+        # session.commit()
         await ctx.send(str(user))
 
     @commands.command()
@@ -48,7 +48,7 @@ class Register(commands.Cog):
             ctx:
         """
         user = self.users[ctx.author.id]
-        player = Player(level=1, exp=0, money=500, hp_last_updated=datetime.utcnow())
+        player = Player(level=1, exp=0, money=500)
         player.attribute = rng.random_attribute(user.dice_roll)
         user.player = player
 
@@ -61,6 +61,12 @@ class Register(commands.Cog):
     # async def confirm_error(self, ctx, error):
     #     if isinstance(error, commands.CheckFailure):
     #         await ctx.send("Can't confirm, please roll the die first!")
+
+    @commands.command()
+    async def rollback(self, ctx):
+        session.rollback()
+
+        await ctx.send('connection rollback')
 
 
 def setup(bot):
