@@ -134,55 +134,55 @@ class Adventurer(commands.Cog):
         #
         # await ctx.send(embed=embed)
 
-    @commands.command()
-    async def craft(self, ctx, *, arg: str):
-        item = arg.lower()
-        author_id = ctx.author.id
-
-        player = query_player(author_id)
-
-        item_plan: ItemPlan = get_item(item, self.item_plans)
-
-        if item_plan:
-
-            plan_mats = {}  # create dictionary for the materials
-            for mat in item_plan.materials:
-                plan_mats[mat.name] = mat.amount
-
-            char_items = {}  # create dictionary for the player items
-            for c_item in player.items:
-                char_items[c_item.name] = c_item.amount
-
-            if all(key in char_items for key in plan_mats.keys()):
-                for name in plan_mats:
-                    char_amount = char_items[name]
-
-                    if char_amount < plan_mats[name]:  # check if player item amount is less than the required amount
-                        raise InsufficientAmount('Required amount is not enough')
-
-                    # deduct amount from the required amount
-                    char_items[name] -= plan_mats[name]
-
-                # after traversing the mats, copy remaining amounts of char_items to the player.items
-                while char_items:  # char_items is not empty
-                    for c_item in player.items:
-                        name = c_item.name
-                        if name in char_items:
-                            c_item.amount = char_items[name]
-                            del char_items[name]
-
-                item = get_item(item_plan.item.name, player.items)
-                if item:
-                    item.amount += 1
-                else:
-                    player.items.append(PlayerItem(item=item_plan.item, amount=1))
-
-            else:
-                raise InsufficientItem('not enough materials')
-        else:
-            raise ItemNotFound('invalid item')
-
-        session.commit()
+    # @commands.command()
+    # async def craft(self, ctx, *, arg: str):
+    #     item = arg.lower()
+    #     author_id = ctx.author.id
+    #
+    #     player = query_player(author_id)
+    #
+    #     item_plan: ItemPlan = get_item(item, self.item_plans)
+    #
+    #     if item_plan:
+    #
+    #         plan_mats = {}  # create dictionary for the materials
+    #         for mat in item_plan.materials:
+    #             plan_mats[mat.name] = mat.amount
+    #
+    #         char_items = {}  # create dictionary for the player items
+    #         for c_item in player.items:
+    #             char_items[c_item.name] = c_item.amount
+    #
+    #         if all(key in char_items for key in plan_mats.keys()):
+    #             for name in plan_mats:
+    #                 char_amount = char_items[name]
+    #
+    #                 if char_amount < plan_mats[name]:  # check if player item amount is less than the required amount
+    #                     raise InsufficientAmount('Required amount is not enough')
+    #
+    #                 # deduct amount from the required amount
+    #                 char_items[name] -= plan_mats[name]
+    #
+    #             # after traversing the mats, copy remaining amounts of char_items to the player.items
+    #             while char_items:  # char_items is not empty
+    #                 for c_item in player.items:
+    #                     name = c_item.name
+    #                     if name in char_items:
+    #                         c_item.amount = char_items[name]
+    #                         del char_items[name]
+    #
+    #             item = get_item(item_plan.item.name, player.items)
+    #             if item:
+    #                 item.amount += 1
+    #             else:
+    #                 player.items.append(PlayerItem(item=item_plan.item, amount=1))
+    #
+    #         else:
+    #             raise InsufficientItem('not enough materials')
+    #     else:
+    #         raise ItemNotFound('invalid item')
+    #
+    #     session.commit()
 
     @commands.command(aliases=['loc', 'location', 'locations', 'place'])
     async def places(self, ctx: commands.Context):

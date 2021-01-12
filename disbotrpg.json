@@ -2,5 +2,10 @@
   "hp_regen": {
     "interval": 600,
     "amount": 10
+  },
+  "player": {
+    "hp": 50,
+    "strength": 15,
+    "defense": 5
   }
 }

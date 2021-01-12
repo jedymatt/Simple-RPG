@@ -35,8 +35,8 @@ def random_attribute(die_number) -> Attribute:
     else:
         raise ValueError('Dice number should not exceed 6 or lower than 1')
 
-    hp = random.randint(minimum, maximum) + 50
-    strength = random.randint(minimum, maximum) + 15
-    defense = random.randint(minimum, maximum) + 5
+    hp = random.randint(minimum, maximum)
+    strength = random.randint(minimum, maximum)
+    defense = random.randint(minimum, maximum)
 
     return Attribute(hp=hp, strength=strength, defense=defense)
