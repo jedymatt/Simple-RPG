@@ -37,30 +37,30 @@ def get_item(item_name: str, items):
     return None
 
 
-def split_str_int(arg: str):
-    """
-
-    Splits the string into new string and integer.
-    Default integer is 1 if not specified.
-
-    Args:
-        arg: string with any content followed by integer
-
-    Returns: string and integer
-    """
-    arg = arg.split(' ')
-    size = len(arg)
-
-    integer = arg[size - 1]
-
-    try:
-        integer = int(integer)
-        string = ' '.join(arg[:size - 1])
-    except ValueError:
-        integer = 1
-        string = ' '.join(arg)
-
-    return string, integer
+# def split_str_int(arg: str):
+#     """
+#
+#     Splits the string into new string and integer.
+#     Default integer is 1 if not specified.
+#
+#     Args:
+#         arg: string with any content followed by integer
+#
+#     Returns: string and integer
+#     """
+#     arg = arg.split(' ')
+#     size = len(arg)
+#
+#     integer = arg[size - 1]
+#
+#     try:
+#         integer = int(integer)
+#         string = ' '.join(arg[:size - 1])
+#     except ValueError:
+#         integer = 1
+#         string = ' '.join(arg)
+#
+#     return string, integer
 
 
 class Adventurer(commands.Cog):
