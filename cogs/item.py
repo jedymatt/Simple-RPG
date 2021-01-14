@@ -3,6 +3,7 @@ from disbotrpg import Item, ItemPlan, PlanMaterial, Equipment, ShopItem, PlayerI
 from db import session
 import discord
 from cogs.utils.errors import ItemNotFound, InvalidAmount, InsufficientAmount, InsufficientItem
+from cogs.utils.stripper import strip_name_amount
 
 
 def get_plan(item_name, plans):
@@ -11,20 +12,6 @@ def get_plan(item_name, plans):
             return plan
 
     return None
-
-
-def strip_name_amount(arg: str):
-    strings = arg.split(' ')
-
-    size = len(strings)
-    try:
-        first = strings[:size - 1]
-        second = int(strings[size - 1])
-    except ValueError:
-        first = arg
-        second = 1
-
-    return first, second
 
 
 class ItemCommand(commands.Cog, name='Manage Items'):
