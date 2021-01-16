@@ -94,7 +94,7 @@ class ItemCommand(commands.Cog, name='Manage Items'):
         else:
             embed = discord.Embed(
                 title='Craft failed',
-                colour=discord.Colour.dark_theme()
+                colour=discord.Colour.dark_red()
             )
 
             msg = '\n'.join(f"{lack['lack']} {lack['item']}" for lack in lack_materials)
