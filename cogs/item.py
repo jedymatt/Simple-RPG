@@ -6,14 +6,6 @@ from cogs.utils.errors import ItemNotFound, InvalidAmount, InsufficientAmount, I
 from cogs.utils.stripper import strip_name_amount
 
 
-def get_plan(item_name, plans):
-    for plan in plans:
-        if item_name == str(plan.item.name).lower():
-            return plan
-
-    return None
-
-
 class ItemCommand(commands.Cog, name='Manage Items'):
 
     def __init__(self, bot):
@@ -45,83 +37,82 @@ class ItemCommand(commands.Cog, name='Manage Items'):
     @commands.command()
     async def craft(self, ctx: commands.Context, *, arg: str):
         name, amount = strip_name_amount(arg)
+        author_id = ctx.author.id
 
-        pass
-        #
-        # item_name = arg.lower()
-        # author_id = ctx.author.id
-        #
-        # player: Player = session.query(Player).filter(User.discord_id == author_id).one()
-        #
-        # # search for matched plan in plans
-        # item_plan: ItemPlan = get_plan(item_name, self.item_plans)
-        #
-        # if item_plan:
-        #     # check if player's items are in the materials, and if it
-        #
-        #     new_amounts = {}
-        #     for material in item_plan.materials:
-        #
-        #         for player_item in player.items:
-        #
-        #             if player_item.item == material.item:
-        #                 if player_item.amount > material.amount:
-        #                     break
-        #                 else:
-        #                     raise InsufficientAmount('Not enough amount')
-        #         else:
-        #             raise InsufficientItem('Not enough item')
-        #
-        #         new_amounts[material.item.name] = material.amount - player_item.amount
-        #
-        #     for player_item in player.items:
-        #         if player_item.item.name in new_amounts:
-        #             player_item.amount = new_amounts[player_item.item.name]
-        #
-        #     if item_plan.item not in player.items:
-        #         new_item = ItemPlan(item=item_plan.item)
-        #         player.items.append(new_item)
-        #     else:
-        #         for old_item in item
+        # search for matched plan in plans
+        # item_plan = next((item_plan for item_plan in self.item_plans if name.lower() == item_plan.name.lower()), None)
+        # if item_plan not exists, then raise an error otherwise proceed
 
-        # plan_mats = {}  # create dictionary for the materials
-        # for mat in plan.materials:
-        #     plan_mats[mat.name] = mat.amount
-        #
-        # char_items = {}  # create dictionary for the player items
-        # for c_item in player.items:
-        #     char_items[c_item.name] = c_item.amount
-        #
-        # if all(key in char_items for key in plan_mats.keys()):
-        #     for name in plan_mats:
-        #         char_amount = char_items[name]
-        #
-        #         if char_amount < plan_mats[name]:  # check if player item amount is less than the required amount
-        #             raise InsufficientAmount('Required amount is not enough')
-        #
-        #         # deduct amount from the required amount
-        #         char_items[name] -= plan_mats[name]
-        #
-        #     # after traversing the mats, copy remaining amounts of char_items to the player.items
-        #     while char_items:  # char_items is not empty
-        #         for c_item in player.items:
-        #             name = c_item.name
-        #             if name in char_items:
-        #                 c_item.amount = char_items[name]
-        #                 del char_items[name]
-        #
-        #     item_name = get_item(plan.item.name, player.items)
-        #     if item_name:
-        #         item_name.amount += 1
-        #     else:
-        #         player.items.append(PlayerItem(item=plan.item, amount=1))
-        #
-        # else:
-        #     raise InsufficientItem('not enough materials')
-        # else:
-        # raise ItemNotFound('invalid item')
+        try:
+            # search for matched plan in plans
+            item_plan = next(item_plan for item_plan in self.item_plans if name.lower() == item_plan.name.lower())
+        except StopIteration:
+            raise ItemNotFound('Item not found')
 
-    session.commit()
+        player = session.query(Player).filter(User.discord_id == author_id).one()
+
+        new_amounts = {}
+        success = True
+        lack_materials = []
+        for material in item_plan.materials:
+            # total amount of material
+            material_amount = material.amount * amount
+            # get player_item that matches material
+            player_item: PlayerItem = next(
+                (player_item for player_item in player.items if material.item == player_item.item), None)
+
+            if player_item:
+                if player_item.amount < material_amount:
+                    success = False  # raise an error or count how much is lacking
+                    lack_materials.append({'item': player_item.name,
+                                           'lack': player_item.amount - material_amount
+                                           })
+                else:
+                    new_amounts[material.item.name] = player_item.amount - material_amount
+
+            else:
+                success = False  # no matched player_item in the plan_materials
+                lack_materials.append({'item': material.item.name,
+                                       'lack': - material_amount
+                                       })
+
+        if success:  # if success, overwrite amounts
+
+            for player_item in player.items:
+                if player_item.item.name in new_amounts:
+                    player_item.amount = new_amounts[player_item.item.name]
+
+            if item_plan.item not in player.items:
+                new_player_item = PlayerItem(item=item_plan.item, amount=amount)
+                player.items.append(new_player_item)
+            else:
+                item = next(item for item in player.items if item == item_plan.item)
+                item.amount += amount
+
+            await ctx.send('success')
+
+        else:
+            embed = discord.Embed(
+                title='Craft failed',
+                colour=discord.Colour.dark_theme()
+            )
+
+            msg = '\n'.join(f"{lack['lack']} {lack['item']}" for lack in lack_materials)
+
+            embed.add_field(
+                name='Missing materials',
+                value=msg
+            )
+
+            await ctx.send(embed=embed)
+
+    @craft.error
+    async def craft_error(self, ctx, error):
+        if isinstance(error, commands.MissingRequiredArgument):
+            await ctx.send('Please specify the item:')
+            await self.craftable(ctx)
+        if isinstance(error, ItemNotFound):
+            await ctx.send('Invalid item')
 
 
 def setup(bot):
