@@ -4,7 +4,7 @@ from db import session
 import discord
 from cogs.utils.errors import CharacterNotFound, InvalidAmount, ItemNotFound, InsufficientAmount, InsufficientItem
 from cogs.utils.errors import ItemNotSellable
-from disbotrpg import User, Location, ItemPlan, Item, ShopItem, Player, PlayerItem
+from models import User, Location, ItemPlan, Item, ShopItem, Player, PlayerItem
 
 
 def query_player(user_id):
@@ -298,104 +298,104 @@ class Adventurer(commands.Cog):
 
         await ctx.send(shop_items_string)
 
-    @commands.command()
-    async def buy(self, ctx, *, item_name_amount: str):
+    # @commands.command()
+    # async def buy(self, ctx, *, item_name_amount: str):
+    #
+    #     item_name, item_amount = split_str_int(item_name_amount)
+    #
+    #     # if amount is not valid throw an error
+    #     if item_amount <= 0:
+    #         raise InvalidAmount('Amount reached zero or below zero.')
+    #
+    #     # get user's player
+    #     player = query_player(ctx.author.id)
+    #
+    #     shop_item = get_item(item_name, self.shop_items)
+    #
+    #     if shop_item:
+    #         total_cost = shop_item.money_value * item_amount
+    #
+    #         # check if money is enough before making transaction
+    #         if total_cost > player.money:
+    #             raise ValueError(f"Not enough money to buy '{item_name}'")
+    #
+    #         # Deduct money
+    #         player.money -= total_cost
+    #
+    #         # check if item to be added is already in the character.items otherwise create object
+    #         item = get_item(item_name, player.items)
+    #         if item:
+    #             item.amount += item_amount
+    #         else:
+    #             player.items.append(PlayerItem(item=shop_item, amount=item_amount))
+    #     else:
+    #         raise ItemNotFound
+    #
+    #     await ctx.send('item added to inventory, new balance: {}'.format(player.money))
+    #     session.commit()
+    #
+    # @buy.error
+    # async def buy_error(self, ctx, error):
+    #     if isinstance(error, commands.MissingRequiredArgument):
+    #         await self.shop(ctx)
+    #
+    #     if isinstance(error, InvalidAmount):
+    #         await ctx.send('invalid amount')
+    #
+    #     if isinstance(error, ItemNotFound):
+    #         await ctx.send('invalid item')
 
-        item_name, item_amount = split_str_int(item_name_amount)
-
-        # if amount is not valid throw an error
-        if item_amount <= 0:
-            raise InvalidAmount('Amount reached zero or below zero.')
-
-        # get user's player
-        player = query_player(ctx.author.id)
-
-        shop_item = get_item(item_name, self.shop_items)
-
-        if shop_item:
-            total_cost = shop_item.money_value * item_amount
-
-            # check if money is enough before making transaction
-            if total_cost > player.money:
-                raise ValueError(f"Not enough money to buy '{item_name}'")
-
-            # Deduct money
-            player.money -= total_cost
-
-            # check if item to be added is already in the character.items otherwise create object
-            item = get_item(item_name, player.items)
-            if item:
-                item.amount += item_amount
-            else:
-                player.items.append(PlayerItem(item=shop_item, amount=item_amount))
-        else:
-            raise ItemNotFound
-
-        await ctx.send('item added to inventory, new balance: {}'.format(player.money))
-        session.commit()
-
-    @buy.error
-    async def buy_error(self, ctx, error):
-        if isinstance(error, commands.MissingRequiredArgument):
-            await self.shop(ctx)
-
-        if isinstance(error, InvalidAmount):
-            await ctx.send('invalid amount')
-
-        if isinstance(error, ItemNotFound):
-            await ctx.send('invalid item')
-
-    @commands.command()
-    async def sell(self, ctx, *, item_name_amount: str):
-
-        item_name, item_amount = split_str_int(item_name_amount)
-
-        # if amount is not valid throw an error
-        if item_amount <= 0:
-            raise InvalidAmount('Amount reached zero or below zero.')
-
-        player = query_player(ctx.author.id)
-
-        char_item: PlayerItem = get_item(item_name, player.items)
-
-        if char_item:
-
-            if char_item.item.is_sellable is False:
-                raise ItemNotSellable
-
-            if char_item.amount < item_amount:
-                raise InsufficientAmount
-
-            char_item.amount -= item_amount
-
-            gain = char_item.item.money_value * item_amount
-
-            # total gain is 80% of the calculated gain
-            total_gain = int(gain * 0.8)
-            player.money += total_gain
-
-            await ctx.send('item sold,  gained money: +{}'.format(total_gain))
-        else:
-            raise ItemNotFound
-
-        session.commit()
-
-    @sell.error
-    async def sell_error(self, ctx, error):
-        if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send('item not specified')
-
-        if isinstance(error, InvalidAmount):
-            await ctx.send('invalid amount')
-
-        if isinstance(error, ItemNotFound):
-            await ctx.send('item not found')
-
-        if isinstance(error, ItemNotSellable):
-            await ctx.send('item not sellable')
-
-        if isinstance(error, InsufficientAmount):
-            await ctx.send('item amount is not enough')
+    # @commands.command()
+    # async def sell(self, ctx, *, item_name_amount: str):
+    #
+    #     item_name, item_amount = split_str_int(item_name_amount)
+    #
+    #     # if amount is not valid throw an error
+    #     if item_amount <= 0:
+    #         raise InvalidAmount('Amount reached zero or below zero.')
+    #
+    #     player = query_player(ctx.author.id)
+    #
+    #     char_item: PlayerItem = get_item(item_name, player.items)
+    #
+    #     if char_item:
+    #
+    #         if char_item.item.is_sellable is False:
+    #             raise ItemNotSellable
+    #
+    #         if char_item.amount < item_amount:
+    #             raise InsufficientAmount
+    #
+    #         char_item.amount -= item_amount
+    #
+    #         gain = char_item.item.money_value * item_amount
+    #
+    #         # total gain is 80% of the calculated gain
+    #         total_gain = int(gain * 0.8)
+    #         player.money += total_gain
+    #
+    #         await ctx.send('item sold,  gained money: +{}'.format(total_gain))
+    #     else:
+    #         raise ItemNotFound
+    #
+    #     session.commit()
+    #
+    # @sell.error
+    # async def sell_error(self, ctx, error):
+    #     if isinstance(error, commands.MissingRequiredArgument):
+    #         await ctx.send('item not specified')
+    #
+    #     if isinstance(error, InvalidAmount):
+    #         await ctx.send('invalid amount')
+    #
+    #     if isinstance(error, ItemNotFound):
+    #         await ctx.send('item not found')
+    #
+    #     if isinstance(error, ItemNotSellable):
+    #         await ctx.send('item not sellable')
+    #
+    #     if isinstance(error, InsufficientAmount):
+    #         await ctx.send('item amount is not enough')
 
 
 def setup(bot):

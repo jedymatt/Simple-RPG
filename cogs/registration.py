@@ -1,8 +1,8 @@
 from discord.ext import commands
 from cogs.utils import rng
 from db import session
-from disbotrpg import User, Player
-from disbotrpg.config import PLAYER_HP, PLAYER_STRENGTH, PLAYER_DEFENSE
+from models import User, Player
+from models.config import PLAYER_HP, PLAYER_STRENGTH, PLAYER_DEFENSE
 
 
 # TODO: add task to commit every 5 minutes or so, check 'confirm' method

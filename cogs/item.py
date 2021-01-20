@@ -1,5 +1,5 @@
 from discord.ext import commands
-from disbotrpg import Item, ItemPlan, PlanMaterial, Equipment, ShopItem, PlayerItem, Player, User
+from models import Item, ItemPlan, PlanMaterial, Equipment, ShopItem, PlayerItem, Player, User
 from db import session
 import discord
 from cogs.utils.errors import ItemNotFound, InvalidAmount, InsufficientAmount, InsufficientItem
@@ -113,6 +113,8 @@ class ItemCommand(commands.Cog, name='Manage Items'):
             await self.craftable(ctx)
         if isinstance(error, ItemNotFound):
             await ctx.send('Invalid item')
+
+        raise error
 
 
 def setup(bot):

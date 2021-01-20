@@ -1,5 +1,5 @@
 import random
-from disbotrpg import Attribute
+from models import Attribute
 
 
 def die():
