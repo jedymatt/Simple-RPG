@@ -29,7 +29,21 @@ class Location(Base):
     description = Column(Text)
     unlock_level = Column(Integer, default=0)
 
-    materials: list = relationship('RawMaterial', back_populates='location')
+    raw_materials: list = relationship('LocationRawMaterial', back_populates='location')
 
     def __repr__(self):
         return "<Location(name='%s', unlock_level='%s')>" % (self.name, self.unlock_level)
+
+
+class LocationRawMaterial(Base):
+    __tablename__ = 'location_raw_materials'
+
+    id = Column(Integer, primary_key=True)
+    location_id = Column(Integer, ForeignKey('locations.id'))
+    raw_material_id = Column(Integer, ForeignKey('items.id'))
+    drop_chance = Column(Float)
+    drop_amount_min = Column(Integer)
+    drop_amount_max = Column(Integer)
+
+    location = relationship('Location', back_populates='raw_materials', foreign_keys=[location_id], uselist=False)
+    raw_material = relationship('RawMaterial', back_populates='location', foreign_keys=[raw_material_id], uselist=False)

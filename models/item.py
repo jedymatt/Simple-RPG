@@ -43,8 +43,7 @@ class Consumable(Item):
 
 class RawMaterial(Item):
     # added location, TENTATIVE
-    location_id = Column(Integer, ForeignKey('locations.id'))
-    location = relationship('Location', back_populates='materials', foreign_keys=[location_id], uselist=False)
+    location = relationship('LocationRawMaterial', back_populates='raw_material', uselist=False)
 
     __mapper_args__ = {
         'polymorphic_identity': 'raw_material',

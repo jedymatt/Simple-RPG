@@ -1,6 +1,7 @@
 from .base import Base
 from .base import Attribute
 from .base import Location
+from .base import LocationRawMaterial
 
 from .character import Character
 from .character import PlayerItem
