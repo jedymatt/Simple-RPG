@@ -71,46 +71,46 @@ class Adventurer(commands.Cog):
         self.item_plans = None
         self.shop_items = None
 
-    @commands.Cog.listener()
-    async def on_ready(self):
-        # query locations
-        self.locations = session.query(Location).all()
-
-        print('Locations loaded:', end=' ')
-        print([location.name for location in self.locations])
-
-        # self.item_plans = session.query(ItemPlan).all()
-        # print('Loaded ItemPlans:')
-        # for item_plan in self.item_plans:
-        #     print(item_plan.item)
-        #
-        # # load shop items
-        # self.shop_items = session.query(ShopItem).all()
-        # print('Loaded ShopItems:')
-        # for shop_item in self.shop_items:
-        #     print(shop_item.item)
-
-    @commands.command()
-    async def attack(self, ctx):
-        pass
-
-    @commands.command()
-    async def duel(self, ctx, mentioned_user):
-        pass
-
-    @commands.command()
-    async def goto(self, ctx, *, location_name: str):
-        """Go to another place"""
-        author_id = ctx.author.id
-        player = query_player(author_id)
-
-        location_name = location_name.lower()
-
-        for location in self.locations:
-            if location_name == str(location.name).lower():
-                player.location = location
-
-        session.commit()
+    # @commands.Cog.listener()
+    # async def on_ready(self):
+    #     # query locations
+    #     self.locations = session.query(Location).all()
+    #
+    #     print('Locations loaded:', end=' ')
+    #     print([location.name for location in self.locations])
+    #
+    #     # self.item_plans = session.query(ItemPlan).all()
+    #     # print('Loaded ItemPlans:')
+    #     # for item_plan in self.item_plans:
+    #     #     print(item_plan.item)
+    #     #
+    #     # # load shop items
+    #     # self.shop_items = session.query(ShopItem).all()
+    #     # print('Loaded ShopItems:')
+    #     # for shop_item in self.shop_items:
+    #     #     print(shop_item.item)
+    #
+    # @commands.command()
+    # async def attack(self, ctx):
+    #     pass
+    #
+    # @commands.command()
+    # async def duel(self, ctx, mentioned_user):
+    #     pass
+    #
+    # @commands.command()
+    # async def goto(self, ctx, *, location_name: str):
+    #     """Go to another place"""
+    #     author_id = ctx.author.id
+    #     player = query_player(author_id)
+    #
+    #     location_name = location_name.lower()
+    #
+    #     for location in self.locations:
+    #         if location_name == str(location.name).lower():
+    #             player.location = location
+    #
+    #     session.commit()
 
     # @commands.command(aliases=['plan', 'plans'])
     # async def item_plan(self, ctx):
@@ -280,23 +280,23 @@ class Adventurer(commands.Cog):
     async def daily(self, ctx):
         """Claim daily rewards, if already claimed show remaining time until next reward"""
 
-    @commands.command()
-    async def items(self, ctx):
-        """Show list of items"""
-        author_id = ctx.author.id
-
-        player = query_player(author_id)
-
-        string_items = '\n'.join([f"{char_item.amount} {char_item.item.name}" for char_item in player.items])
-
-        await ctx.send(string_items)
-
-    @commands.command()
-    async def shop(self, ctx):
-        """Shows list of items in the shop"""
-        shop_items_string = '\n'.join([f"{item.name} cost:{item.money_value}" for item in self.shop_items])
-
-        await ctx.send(shop_items_string)
+    # @commands.command()
+    # async def items(self, ctx):
+    #     """Show list of items"""
+    #     author_id = ctx.author.id
+    #
+    #     player = query_player(author_id)
+    #
+    #     string_items = '\n'.join([f"{char_item.amount} {char_item.item.name}" for char_item in player.items])
+    #
+    #     await ctx.send(string_items)
+    #
+    # @commands.command()
+    # async def shop(self, ctx):
+    #     """Shows list of items in the shop"""
+    #     shop_items_string = '\n'.join([f"{item.name} cost:{item.money_value}" for item in self.shop_items])
+    #
+    #     await ctx.send(shop_items_string)
 
     # @commands.command()
     # async def buy(self, ctx, *, item_name_amount: str):

@@ -2,6 +2,7 @@ from models.base import Base
 from sqlalchemy import Column, Integer, BigInteger, DateTime
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+from sqlalchemy.schema import FetchedValue
 
 
 class User(Base):
@@ -10,7 +11,8 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     discord_id = Column(BigInteger, unique=True, nullable=False)
     dice_roll = Column(Integer)
-    last_online = Column(DateTime, server_default=func.utcnow(), server_onupdate=func.utcnow())
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    last_online = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     player = relationship('Player', back_populates='user', uselist=False)
 

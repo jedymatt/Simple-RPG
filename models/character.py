@@ -2,7 +2,7 @@ from models.base import Attribute, Base
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, func, Float
 from sqlalchemy.orm import relationship
 from models.util import occurrence
-from models.config import HP_REGEN_AMOUNT, HP_REGEN_INTERVAL, PLAYER_HP, PLAYER_DEFENSE, PLAYER_STRENGTH
+from models.config import HP_REGEN_AMOUNT, HP_REGEN_INTERVAL, BASE_HP, BASE_DEFENSE, BASE_STRENGTH
 from datetime import datetime
 from math import floor
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -153,10 +153,10 @@ class Player(Character):
     def level_up(self):
 
         # get stat to be added by getting the differences
-        gap_str = floor(PLAYER_STRENGTH * (self.stat_growth ** (self.level + 1))) - floor(
-            PLAYER_STRENGTH * (self.stat_growth ** self.level))
-        gap_def = floor(PLAYER_DEFENSE * (self.stat_growth ** (self.level + 1))) - floor(
-            PLAYER_DEFENSE * (self.stat_growth ** self.level))
+        gap_str = floor(BASE_STRENGTH * (self.stat_growth ** (self.level + 1))) - floor(
+            BASE_STRENGTH * (self.stat_growth ** self.level))
+        gap_def = floor(BASE_DEFENSE * (self.stat_growth ** (self.level + 1))) - floor(
+            BASE_DEFENSE * (self.stat_growth ** self.level))
 
         self.strength += gap_str
         self.defense += gap_def
