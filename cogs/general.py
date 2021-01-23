@@ -7,34 +7,34 @@ from cogs.utils.errors import ItemNotSellable
 from models import User, Location, ItemPlan, Item, ShopItem, Player, PlayerItem
 
 
-def query_player(user_id):
-    """
-    Finds user's character from database.
-
-    Args:
-        user_id: discord user id
-
-    Returns:
-        Character: Character that matches the user's id
-
-    Raises:
-         CharacterNotFound: If the character is not found in the database
-    """
-
-    result = session.query(Player).filter(User.discord_id == user_id).one()
-
-    if result is None:
-        raise CharacterNotFound('Character not found in the database.')
-
-    return result
-
-
-def get_item(item_name: str, items):
-    for item in items:
-        if str(item.name).lower() == item_name.lower():
-            return item
-
-    return None
+# def query_player(user_id):
+#     """
+#     Finds user's character from database.
+#
+#     Args:
+#         user_id: discord user id
+#
+#     Returns:
+#         Character: Character that matches the user's id
+#
+#     Raises:
+#          CharacterNotFound: If the character is not found in the database
+#     """
+#
+#     result = session.query(Player).filter(User.discord_id == user_id).one()
+#
+#     if result is None:
+#         raise CharacterNotFound('Character not found in the database.')
+#
+#     return result
+#
+#
+# def get_item(item_name: str, items):
+#     for item in items:
+#         if str(item.name).lower() == item_name.lower():
+#             return item
+#
+#     return None
 
 
 # def split_str_int(arg: str):
@@ -184,101 +184,101 @@ class Adventurer(commands.Cog):
     #
     #     session.commit()
 
-    @commands.command(aliases=['loc', 'location', 'locations', 'place'])
-    async def places(self, ctx: commands.Context):
-        """Show places"""
-        embed = discord.Embed(
-            title='Places',
-
-            colour=discord.Colour.purple()
-        )
-
-        embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
-
-        # _embed.set_thumbnail(url= map thumbnail)
-
-        char = query_player(ctx.author.id)
-
-        embed.add_field(
-            name="Current Location",
-            value=str(char.location.name if char.location else 'None'),
-            inline=False
-        )
-
-        str_loc = '\n'.join([f"{location.name} - *{location.description}*" for location in self.locations])
-
-        embed.add_field(
-            name='All Places',
-            value=str_loc
-        )
-
-        await ctx.send(embed=embed)
-
-    @commands.command()
-    async def gather(self, ctx):
-        """Gather raw materials"""
-        pass
-
-    @commands.command()
-    async def explore(self, ctx):
-        """Explore the current area"""
-
-    @commands.command()
-    async def profile(self, ctx: commands.Context):
-        """Show profile"""
-        user_id = ctx.author.id
-
-        # if user_id not in self.characters:
-        #     self.characters[user_id] = query_character(user_id)
-
-        player = query_player(user_id)
-
-        # Embedded format
-        embed = discord.Embed(
-            title=f"{ctx.author.name}'s profile",
-            colour=discord.Colour.orange(),
-        )
-
-        embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
-        # _embed.set_thumbnail(url= avatar logo)
-
-        embed.add_field(
-            name='Details',
-            value="Level: {}\n"
-                  "Exp: {} / {}\n"
-                  "Location: {}".format(player.level,
-                                        player.exp,
-                                        player.next_level_exp(),
-                                        player.location.name if player.location else None
-                                        ),
-            inline=False
-        )
-        embed.add_field(
-            name='Stats',
-            value="HP: {} / {}\n"
-                  "Strength: {}\n"
-                  "Defense: {}".format(player.current_hp,
-                                       int(player.max_hp),
-                                       int(player.strength),
-                                       int(player.defense)),
-            inline=False
-        )
-
-        embed.add_field(
-            name='Others',
-            value="Money: {}".format(player.money),
-            inline=False
-        )
-
-        await ctx.send(embed=embed)
-
-    @commands.command()
-    async def heal(self, ctx):
-        """Uses potion on the player's inventory"""
-
-    @commands.command()
-    async def daily(self, ctx):
-        """Claim daily rewards, if already claimed show remaining time until next reward"""
+    # @commands.command(aliases=['loc', 'location', 'locations', 'place'])
+    # async def places(self, ctx: commands.Context):
+    #     """Show places"""
+    #     embed = discord.Embed(
+    #         title='Places',
+    #
+    #         colour=discord.Colour.purple()
+    #     )
+    #
+    #     embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
+    #
+    #     # _embed.set_thumbnail(url= map thumbnail)
+    #
+    #     char = query_player(ctx.author.id)
+    #
+    #     embed.add_field(
+    #         name="Current Location",
+    #         value=str(char.location.name if char.location else 'None'),
+    #         inline=False
+    #     )
+    #
+    #     str_loc = '\n'.join([f"{location.name} - *{location.description}*" for location in self.locations])
+    #
+    #     embed.add_field(
+    #         name='All Places',
+    #         value=str_loc
+    #     )
+    #
+    #     await ctx.send(embed=embed)
+    #
+    # @commands.command()
+    # async def gather(self, ctx):
+    #     """Gather raw materials"""
+    #     pass
+    #
+    # @commands.command()
+    # async def explore(self, ctx):
+    #     """Explore the current area"""
+    #
+    # @commands.command()
+    # async def profile(self, ctx: commands.Context):
+    #     """Show profile"""
+    #     user_id = ctx.author.id
+    #
+    #     # if user_id not in self.characters:
+    #     #     self.characters[user_id] = query_character(user_id)
+    #
+    #     player = query_player(user_id)
+    #
+    #     # Embedded format
+    #     embed = discord.Embed(
+    #         title=f"{ctx.author.name}'s profile",
+    #         colour=discord.Colour.orange(),
+    #     )
+    #
+    #     embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
+    #     # _embed.set_thumbnail(url= avatar logo)
+    #
+    #     embed.add_field(
+    #         name='Details',
+    #         value="Level: {}\n"
+    #               "Exp: {} / {}\n"
+    #               "Location: {}".format(player.level,
+    #                                     player.exp,
+    #                                     player.next_level_exp(),
+    #                                     player.location.name if player.location else None
+    #                                     ),
+    #         inline=False
+    #     )
+    #     embed.add_field(
+    #         name='Stats',
+    #         value="HP: {} / {}\n"
+    #               "Strength: {}\n"
+    #               "Defense: {}".format(player.current_hp,
+    #                                    int(player.max_hp),
+    #                                    int(player.strength),
+    #                                    int(player.defense)),
+    #         inline=False
+    #     )
+    #
+    #     embed.add_field(
+    #         name='Others',
+    #         value="Money: {}".format(player.money),
+    #         inline=False
+    #     )
+    #
+    #     await ctx.send(embed=embed)
+    #
+    # @commands.command()
+    # async def heal(self, ctx):
+    #     """Uses potion on the player's inventory"""
+    #
+    # @commands.command()
+    # async def daily(self, ctx):
+    #     """Claim daily rewards, if already claimed show remaining time until next reward"""
 
     # @commands.command()
     # async def items(self, ctx):

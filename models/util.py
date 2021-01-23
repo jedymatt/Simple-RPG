@@ -32,3 +32,12 @@ def occurrence(last_updated: datetime, interval: float) -> int:
     now = datetime.now()
     elapsed = now - last_updated
     return int(elapsed.total_seconds() // interval)
+
+
+# TODO: add helper
+def add_exp(character, base_exp):
+    pass
+
+
+def level_up(character, base_exp):
+    pass
