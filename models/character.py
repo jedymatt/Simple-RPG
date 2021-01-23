@@ -104,7 +104,7 @@ class PlayerItem(Base):
 class Player(Character):
     user_id = Column(Integer, ForeignKey('users.id'))
     money = Column(Integer, default=0)
-    hp_last_updated = Column(DateTime, default=func.now())
+    hp_last_updated = Column(DateTime(timezone=True), default=func.now())
     companion_id = Column(Integer, ForeignKey('characters.id'))
 
     user = relationship('User', back_populates='player', uselist=False)
