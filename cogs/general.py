@@ -1,10 +1,8 @@
-from discord.ext import commands
-# from models import Character, User, Location, ItemPlan, CharacterItem, Item
-from db import session
 import discord
-from cogs.utils.errors import CharacterNotFound, InvalidAmount, ItemNotFound, InsufficientAmount, InsufficientItem
-from cogs.utils.errors import ItemNotSellable
-from models import User, Location, ItemPlan, Item, ShopItem, Player, PlayerItem
+from discord.ext import commands
+
+import models as model
+from db import session
 
 
 # def query_player(user_id):
@@ -114,25 +112,25 @@ class Adventurer(commands.Cog):
 
     # @commands.command(aliases=['plan', 'plans'])
     # async def item_plan(self, ctx):
-        # """Show list of craftable items"""
-        #
-        # embed = discord.Embed(
-        #     title='Craft',
-        #     colour=discord.Colour.purple()
-        # )
-        #
-        # embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
-        #
-        # for item_plan in self.item_plans:
-        #     str_materials = '\n'.join([f"{mat.amount} {mat.item.name}" for mat in item_plan.materials])
-        #
-        #     embed.add_field(
-        #         name=item_plan.item.name,
-        #         value=str_materials,
-        #         inline=False
-        #     )
-        #
-        # await ctx.send(embed=embed)
+    # """Show list of craftable items"""
+    #
+    # embed = discord.Embed(
+    #     title='Craft',
+    #     colour=discord.Colour.purple()
+    # )
+    #
+    # embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
+    #
+    # for item_plan in self.item_plans:
+    #     str_materials = '\n'.join([f"{mat.amount} {mat.item.name}" for mat in item_plan.materials])
+    #
+    #     embed.add_field(
+    #         name=item_plan.item.name,
+    #         value=str_materials,
+    #         inline=False
+    #     )
+    #
+    # await ctx.send(embed=embed)
 
     # @commands.command()
     # async def craft(self, ctx, *, arg: str):
@@ -280,16 +278,28 @@ class Adventurer(commands.Cog):
     # async def daily(self, ctx):
     #     """Claim daily rewards, if already claimed show remaining time until next reward"""
 
-    # @commands.command()
-    # async def items(self, ctx):
-    #     """Show list of items"""
-    #     author_id = ctx.author.id
-    #
-    #     player = query_player(author_id)
-    #
-    #     string_items = '\n'.join([f"{char_item.amount} {char_item.item.name}" for char_item in player.items])
-    #
-    #     await ctx.send(string_items)
+    @commands.command()
+    async def items(self, ctx):
+        """Show list of items"""
+        author_id = ctx.author.id
+
+        player = session.query(model.Player).filter(model.User.discord_id == author_id).one()
+
+        # string_items = '\n'.join([f"{char_item.amount} {char_item.item.name}" for char_item in player.items])
+
+        embed = discord.Embed(
+            title='Owned Items',
+            colour=discord.Colour.blurple()
+        )
+
+        for item in player.items:
+            embed.add_field(
+                name=item.name,
+                value="+%s" % item.amount
+            )
+
+        await ctx.send(embed=embed)
+
     #
     # @commands.command()
     # async def shop(self, ctx):
@@ -396,6 +406,16 @@ class Adventurer(commands.Cog):
     #
     #     if isinstance(error, InsufficientAmount):
     #         await ctx.send('item amount is not enough')
+
+    @commands.command()
+    async def commit(self, ctx):
+        session.commit()
+        await ctx.send('done')
+
+    @commands.command()
+    async def flush(self, ctx):
+        session.flush()
+        await ctx.send('done')
 
 
 def setup(bot):

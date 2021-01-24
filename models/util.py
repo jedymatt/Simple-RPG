@@ -1,3 +1,4 @@
+import random
 from datetime import datetime, timedelta
 
 
@@ -41,3 +42,8 @@ def add_exp(character, base_exp):
 
 def level_up(character, base_exp):
     pass
+
+
+def random_boolean(chance):
+    rand = random.random()
+    return rand <= chance
