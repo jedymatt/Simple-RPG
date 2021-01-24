@@ -55,7 +55,7 @@ class Explore(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command()
-    @commands.cooldown(1, 60, type=commands.BucketType.user)
+    @commands.cooldown(1, 60, commands.BucketType.user)
     async def gather(self, ctx):
         """Gather raw materials, sometimes failed, sometimes encounter mobs"""
         author_id = ctx.author.id
