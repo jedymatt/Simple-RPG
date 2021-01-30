@@ -14,7 +14,7 @@ def main():
 
     @bot.command()
     async def ping(ctx: commands.Context):
-        await ctx.send(f'Ping: `{round(bot.latency * 1000)}ms`')
+        await ctx.send(f'Ping: `{round(bot.latency, 2)}ms`')
 
     # load cogs
     for filename in os.listdir('./cogs'):

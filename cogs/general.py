@@ -417,6 +417,11 @@ class Adventurer(commands.Cog):
         session.flush()
         await ctx.send('done')
 
+    @commands.command()
+    async def close(self, ctx):
+        session.close()
+        await ctx.send('done')
+
 
 def setup(bot):
     bot.add_cog(Adventurer(bot))
