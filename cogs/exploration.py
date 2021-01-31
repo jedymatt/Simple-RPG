@@ -79,8 +79,7 @@ class Exploration(commands.Cog):
         )
 
         for gather in gathered:
-
-            # get player_item
+            # get player_item if none found then value is None
             player_item = next(
                 (player_item for player_item in player.items if player_item == gather[0]),
                 None
@@ -90,6 +89,7 @@ class Exploration(commands.Cog):
             if player_item:
                 player_item.amount += gather[1]
             else:
+                # if none, create obj and append it to the Player.items
                 player.items.append(
                     model.PlayerItem(
                         item=gather[0],
@@ -97,13 +97,20 @@ class Exploration(commands.Cog):
                     )
                 )
 
-            # embed field
+            # add embed field
             embed.add_field(
                 name=gather[0].name,
                 value="+%s" % gather[1]
             )
 
         await ctx.send(str(gathered))
+
+    @gather.error
+    async def gather_error(self, ctx, error):
+        if isinstance(error, commands.CommandOnCooldown):
+            await ctx.send(error.args)
+        else:
+            raise error
 
 
 def setup(bot: commands.Bot):
