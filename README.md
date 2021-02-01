@@ -6,7 +6,6 @@ A text-based RPG bot in discord.
 
 ## Development Progress
 
-
 ### Working commands
 
 - gather: gathers items limited to location
