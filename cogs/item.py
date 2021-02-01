@@ -41,7 +41,6 @@ class ItemCommand(commands.Cog, name='Manage Items'):
 
         # search for matched plan in plans
         # item_plan = next((item_plan for item_plan in self.item_plans if name.lower() == item_plan.name.lower()), None)
-        # if item_plan not exists, then raise an error otherwise proceed
 
         try:
             # search for matched plan in plans
