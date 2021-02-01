@@ -100,7 +100,7 @@ class Economy(commands.Cog):
             raise ValueError('Requested amount exceeds the owned amount')
 
         item_to_sell.amount -= amount
-        player.money += (amount * item_to_sell.item.market_value)
+        player.money += round((amount * item_to_sell.item.market_value) * .80)  # 80% total money gained
 
 
 def setup(bot: commands.Bot):
