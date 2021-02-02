@@ -76,7 +76,6 @@ class Economy(commands.Cog):
         else:  # otherwise raise error
             raise ValueError('Item not found')
 
-    # TODO: priority command 'sell'
     @commands.command()
     async def sell(self, ctx, *, args):
         name, amount = stripper.strip_name_amount(args)

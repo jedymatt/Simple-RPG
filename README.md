@@ -14,10 +14,11 @@ A text-based RPG bot in discord.
 - places: displays list of places
 - buy \[item\] \[amount\]: buy items
 - shop: display list of items in the shop
+- craft \[item\] \[amount\]: craft items
 
 ### TODO: commands
 
-- equip \[item\]: equip item
+
 - equipment(s): shows list of equipments
 - heal: heals the player's HP and removes
 - battle: None
@@ -27,7 +28,7 @@ A text-based RPG bot in discord.
 ### Untested commands
 
 - sell \[item\] \[amount\]: sells any items owned by the player, gains 80% of the market value
-- craft \[item\] \[amount\]: craft items
+- equip \[item\]: equip item
 
 ### Tentative plans
 

@@ -109,7 +109,7 @@ class Player(Character):
 
     user = relationship('User', back_populates='player', uselist=False)
     items: list = relationship('PlayerItem')
-    equipment = relationship('EquipmentSet', uselist=False)
+    equipment_set = relationship('EquipmentSet', uselist=False)
     companion = relationship('Friendly', foreign_keys=[companion_id], uselist=False)
 
     __mapper_args__ = {

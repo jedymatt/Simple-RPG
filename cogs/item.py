@@ -1,5 +1,5 @@
 from discord.ext import commands
-from models import Item, ItemPlan, PlanMaterial, Equipment, ShopItem, PlayerItem, Player, User
+from models import Item, ItemPlan, PlanMaterial, Equipment, ShopItem, PlayerItem, Player, User, Weapon, Shield
 from db import session
 import discord
 from cogs.utils.errors import ItemNotFound, InvalidAmount, InsufficientAmount, InsufficientItem
@@ -114,6 +114,28 @@ class ItemCommand(commands.Cog, name='Manage Items'):
             await ctx.send('Invalid item')
 
         raise error
+
+    @commands.command()
+    async def equip(self, ctx, *, arg: str):
+        name = arg.lower()
+
+        player: Player = session.query(Player).filter(User.discord_id == ctx.author.id).one()
+
+        try:
+            owned_item: PlayerItem = next(
+                player_item for player_item in player.items if str(player_item.item.name).lower() == name)
+        except StopIteration:
+            raise ValueError('No item matched')
+
+        if not isinstance(owned_item.item, Equipment):
+            raise ValueError('Item is not an equipment')
+
+        if isinstance(owned_item.item, Weapon):
+            player.equipment_set.weapon = owned_item.item
+        elif isinstance(owned_item.item, Shield):
+            player.equipment_set.shield = owned_item.item
+
+        await ctx.send('equipped')
 
 
 def setup(bot):

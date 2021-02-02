@@ -28,7 +28,7 @@ class Item(Base):
 
 
 class Consumable(Item):
-    is_random_attr = Column(Boolean, default=True)
+    is_random_attr = Column(Boolean, default=False)
     attribute = relationship('Attribute', uselist=False)
 
     @declared_attr
