@@ -135,6 +135,8 @@ class ItemCommand(commands.Cog, name='Manage Items'):
         elif isinstance(owned_item.item, Shield):
             player.equipment_set.shield = owned_item.item
 
+        player.attribute += owned_item.item.attribute
+
         await ctx.send('equipped')
 
 

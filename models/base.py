@@ -16,6 +16,19 @@ class Attribute(Base):
     def __repr__(self):
         return "<Attribute(hp='%s', strength='%s', defense='%s')>" % (self.hp, self.strength, self.defense)
 
+    def __add__(self, other):
+        self.hp += other.hp
+        self.strength += other.strength
+        self.defense += other.defense
+        return self
+
+    def __sub__(self, other):
+        self.hp -= other.hp
+        self.strength -= other.strength
+        self.defense -= other.defense
+
+        return self
+
     @classmethod
     def copy(cls, other):
         return Attribute(hp=other.hp, strength=other.strength, defense=other.defense)
