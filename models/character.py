@@ -1,11 +1,13 @@
-from models.base import Attribute, Base
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, func, Float
-from sqlalchemy.orm import relationship
-from models.util import occurrence
-from models.config import HP_REGEN_AMOUNT, HP_REGEN_INTERVAL, BASE_HP, BASE_DEFENSE, BASE_STRENGTH
 from datetime import datetime
 from math import floor
+
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, func, Float
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import relationship
+
+from models.base import Attribute, Base
+from models.config import HP_REGEN_AMOUNT, HP_REGEN_INTERVAL, BASE_DEFENSE, BASE_STRENGTH
+from models.util import occurrence
 
 
 class Character(Base):
@@ -183,6 +185,9 @@ class EquipmentSet(Base):
 
     weapon = relationship('Weapon', uselist=False, foreign_keys=[weapon_id])
     shield = relationship('Shield', uselist=False, foreign_keys=[shield_id])
+
+    def __repr__(self):
+        return "EquipmentSet(weapon='%s', shield='%s')" % (self.weapon.name, self.shield.name)
 
 
 class Entity(Character):

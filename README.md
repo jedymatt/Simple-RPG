@@ -18,8 +18,6 @@ A text-based RPG bot in discord.
 
 ### TODO: commands
 
-
-- equipment(s): shows list of equipments
 - heal: heals the player's HP and removes
 - battle: None
 - Fight: None
@@ -29,6 +27,8 @@ A text-based RPG bot in discord.
 
 - sell \[item\] \[amount\]: sells any items owned by the player, gains 80% of the market value
 - equip \[item\]: equip item
+- equipments: shows list of equipments owned
+- equipped: show equipped set
 
 ### Tentative plans
 

@@ -1,9 +1,10 @@
-from discord.ext import commands
-from models import Item, ItemPlan, PlanMaterial, Equipment, ShopItem, PlayerItem, Player, User, Weapon, Shield
-from db import session
 import discord
-from cogs.utils.errors import ItemNotFound, InvalidAmount, InsufficientAmount, InsufficientItem
+from discord.ext import commands
+
+from cogs.utils.errors import ItemNotFound
 from cogs.utils.stripper import strip_name_amount
+from db import session
+from models import ItemPlan, Equipment, ShopItem, PlayerItem, Player, User, Weapon, Shield
 
 
 class ItemCommand(commands.Cog, name='Manage Items'):
@@ -138,6 +139,34 @@ class ItemCommand(commands.Cog, name='Manage Items'):
         player.attribute += owned_item.item.attribute
 
         await ctx.send('equipped')
+
+    @commands.command()
+    async def equipped(self, ctx):
+        player: Player = session.query(Player).filter(User.discord_id == ctx.author.id).one()
+
+        embed = discord.Embed(
+            title='Equipped',
+            colour=discord.Colour.random
+        )
+
+        embed.add_field(name='Weapon',
+                        value=player.equipment_set.weapon if player.equipment_set and player.equipment_set.weapon \
+                            else "None")
+
+        embed.add_field(name='Shield',
+                        value=player.equipment_set.shield if player.equipment_set and player.equipment_set.shield \
+                            else "None")
+
+        await ctx.send(embed=embed)
+
+    @commands.command()
+    async def equipments(self, ctx):
+        player = session.query(Player).filter(User.discord_id == ctx.author.id).one()
+
+        equipments = '\n'.join([f"{player_item.amount} {player_item.name}" for player_item in player.items if
+                                isinstance(player_item.item, Equipment)])
+
+        await ctx.send(equipments)
 
 
 def setup(bot):
