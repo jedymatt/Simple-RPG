@@ -168,6 +168,11 @@ class ItemCommand(commands.Cog, name='Manage Items'):
 
         await ctx.send(equipments)
 
+    # TODO: add use command
+    @commands.command()
+    async def use(self, ctx, *, arg: str):
+        name, amount = strip_name_amount(arg)
+
 
 def setup(bot):
     bot.add_cog(ItemCommand(bot))
