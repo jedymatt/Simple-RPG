@@ -1,21 +1,11 @@
 import random
+
 from models import Attribute
 
 
-def die():
-    percentage = random.randint(1, 100)
-    if percentage == 100:  # 1%
-        return 6
-    elif percentage > 90:  # 9%
-        return 5
-    elif percentage > 70:  # 20%
-        return 4
-    elif percentage > 30:  # 40%
-        return 3
-    elif percentage > 7:  # 23%
-        return 2
-    else:  # 7%
-        return 1
+def random_dice():
+    return random.choices([1, 2, 3, 4, 5, 6],
+                          weights=[.07, .23, .40, .20, .09, .01])[0]
 
 
 def random_attribute(die_number) -> Attribute:
@@ -39,4 +29,4 @@ def random_attribute(die_number) -> Attribute:
     strength = random.randint(minimum, maximum)
     defense = random.randint(minimum, maximum)
 
-    return Attribute(hp=hp, strength=strength, defense=defense)
+    return Attribute(current_hp=hp, max_hp=hp, strength=strength, defense=defense)
