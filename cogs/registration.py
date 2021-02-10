@@ -1,4 +1,5 @@
 from discord.ext import commands
+
 from cogs.utils import rng
 from db import session
 from models import User, Player
@@ -27,7 +28,7 @@ class Register(commands.Cog):
             ctx:
         """
 
-        result = rng.die()
+        result = rng.random_dice()
 
         if ctx.author.id not in self.users:  # if user is not in dictionary, then create User object
             user = User(discord_id=ctx.author.id, dice_roll=result)
@@ -50,12 +51,12 @@ class Register(commands.Cog):
         user = self.users[ctx.author.id]
         player = Player(level=1, exp=0, money=500, stat_growth=1.5)
         player.attribute = rng.random_attribute(user.dice_roll)
-        player.attribute.hp += BASE_HP
+        player.attribute.current_hp += BASE_HP
+        player.attribute.max_hp += BASE_HP
         player.attribute.strength += BASE_STRENGTH
         player.attribute.defense += BASE_DEFENSE
         user.player = player
 
-        user.player.current_hp = user.player.max_hp  # set current hp value to max hp
         session.commit()
 
         await ctx.send(str(player))

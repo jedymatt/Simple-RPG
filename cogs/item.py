@@ -1,10 +1,13 @@
+import random
+
 import discord
 from discord.ext import commands
 
 from cogs.utils.errors import ItemNotFound
 from cogs.utils.stripper import strip_name_amount
 from db import session
-from models import ItemPlan, Equipment, ShopItem, PlayerItem, Player, User, Weapon, Shield
+from models import Attribute
+from models import ItemPlan, Equipment, ShopItem, PlayerItem, Player, User, Consumable, Weapon, Shield, EquipmentSet
 
 
 class ItemCommand(commands.Cog, name='Manage Items'):
@@ -13,6 +16,27 @@ class ItemCommand(commands.Cog, name='Manage Items'):
         self.bot = bot
         self.item_plans = session.query(ItemPlan).all()
         self.shop_items = session.query(ShopItem).all()
+
+    @commands.command()
+    async def items(self, ctx):
+        """Show list of items"""
+        author_id = ctx.author.id
+
+        player = session.query(Player).filter(User.discord_id == author_id).one()
+
+        embed = discord.Embed(
+            title='Owned Items',
+            colour=discord.Colour.random()
+        )
+
+        for player_item in player.items:
+            if not isinstance(player_item.item, Equipment):
+                embed.add_field(
+                    name=player_item.item.name,
+                    value="+%s" % player_item.amount
+                )
+
+        await ctx.send(embed=embed)
 
     @commands.command(aliases=['craftables', 'plans', 'plan'])
     async def craftable(self, ctx: commands.Context):
@@ -120,23 +144,44 @@ class ItemCommand(commands.Cog, name='Manage Items'):
     async def equip(self, ctx, *, arg: str):
         name = arg.lower()
 
-        player: Player = session.query(Player).filter(User.discord_id == ctx.author.id).one()
+        player = session.query(Player).filter(User.discord_id == ctx.author.id).one()
 
         try:
-            owned_item: PlayerItem = next(
-                player_item for player_item in player.items if str(player_item.item.name).lower() == name)
+            player_item = next(
+                player_item for player_item in player.items if
+                str(player_item.item.name).lower() == name
+            )
         except StopIteration:
-            raise ValueError('No item matched')
+            raise ValueError('No equipment found')
 
-        if not isinstance(owned_item.item, Equipment):
+        if not isinstance(player_item.item, Equipment):
             raise ValueError('Item is not an equipment')
 
-        if isinstance(owned_item.item, Weapon):
-            player.equipment_set.weapon = owned_item.item
-        elif isinstance(owned_item.item, Shield):
-            player.equipment_set.shield = owned_item.item
+        # # if not found throws sqlalchemy.orm.exc.NoResultFound
+        # equipment = session.query(Equipment).filter(PlayerItem.player_id == player.id).filter(
+        #     func.lower(Equipment.name) == name.lower()
+        # ).one()
 
-        player.attribute += owned_item.item.attribute
+        if player_item.amount == 0:
+            raise ValueError('Amount not enough')
+
+        if not player.equipment_set:
+            player.equipment_set = EquipmentSet()
+
+        if isinstance(player_item.item, Weapon):
+            if player.equipment_set.weapon is not None:
+                player.attribute -= player.equipment_set.weapon.attribute
+
+            player.equipment_set.weapon = player_item.item
+        elif isinstance(player_item.item, Shield):
+            if player.equipment_set.shield is not None:
+                player.attribute -= player.equipment_set.shield.attribute
+
+            player.equipment_set.shield = player_item.item
+
+        player.attribute += player_item.item.attribute
+
+        player_item.amount -= 1
 
         await ctx.send('equipped')
 
@@ -146,32 +191,81 @@ class ItemCommand(commands.Cog, name='Manage Items'):
 
         embed = discord.Embed(
             title='Equipped',
-            colour=discord.Colour.random
+            colour=discord.Colour.random()
         )
 
         embed.add_field(name='Weapon',
-                        value=player.equipment_set.weapon if player.equipment_set and player.equipment_set.weapon \
+                        value=player.equipment_set.weapon.name if player.equipment_set and player.equipment_set.weapon \
                             else "None")
 
         embed.add_field(name='Shield',
-                        value=player.equipment_set.shield if player.equipment_set and player.equipment_set.shield \
+                        value=player.equipment_set.shield.name if player.equipment_set and player.equipment_set.shield \
                             else "None")
 
         await ctx.send(embed=embed)
 
     @commands.command()
     async def equipments(self, ctx):
-        player = session.query(Player).filter(User.discord_id == ctx.author.id).one()
+        author_id = ctx.author.id
 
-        equipments = '\n'.join([f"{player_item.amount} {player_item.name}" for player_item in player.items if
-                                isinstance(player_item.item, Equipment)])
+        player = session.query(Player).filter(User.discord_id == author_id).one()
 
-        await ctx.send(equipments)
+        embed = discord.Embed(
+            title='Owned Items',
+            colour=discord.Colour.random()
+        )
 
-    # TODO: add use command
+        for player_item in player.items:
+            if isinstance(player_item.item, Equipment):
+                embed.add_field(
+                    name=player_item.item.name,
+                    value="+%s" % player_item.amount
+                )
+
+        await ctx.send(embed=embed)
+
     @commands.command()
     async def use(self, ctx, *, arg: str):
         name, amount = strip_name_amount(arg)
+
+        player = session.query(Player).filter(User.discord_id == ctx.author.id).one()
+
+        try:
+            player_item: PlayerItem = next(
+                player_item for player_item in player.items if
+                str(player_item.item.name).lower() == name.lower())
+        except StopIteration:
+            raise ValueError('Item to use not found')
+
+        if not isinstance(player_item.item, Consumable):
+            raise ValueError('cannot apply non-consumable item')
+
+        if player_item.amount < amount:
+            raise ValueError('Not enough amount')
+
+        while amount != 0:
+            if player_item.item.is_random_attr:
+                item_attribute: Attribute = player_item.item.attribute
+
+                # get dict of Attribute's attributes, ignores sqlalchemy instance, and 0 values
+                attrs = item_attribute.attrs
+
+                chosen = random.choice(attrs)
+
+                item_value = item_attribute.__getattribute__(chosen)
+                player_attr_value = player.attribute.__getattribute__(chosen)
+
+                if float(item_value).is_integer():
+                    player.attribute.__setattr__(chosen, (item_value + player_attr_value))
+                else:
+                    player.attribute.__setattr__(chosen, round((item_value * player_attr_value) + player_attr_value))
+            else:
+                player.attribute += player_item.item.attribute
+
+            player_item.amount -= 1
+            amount -= 1
+
+        await ctx.send('item is used successfully')
 
 
 def setup(bot):

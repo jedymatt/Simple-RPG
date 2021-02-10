@@ -17,7 +17,6 @@ class Character(Base):
     level = Column(Integer, default=1)
     exp = Column(Integer, default=0)
     stat_growth = Column(Float)
-    _current_hp = Column('current_hp', Integer)
     type = Column(String(50))
     attribute_id = Column(ForeignKey('attributes.id'))
     location_id = Column(ForeignKey('locations.id'))
@@ -32,16 +31,21 @@ class Character(Base):
 
     @hybrid_property
     def current_hp(self):
-        return self._current_hp
+        if self.attribute:
+            return self.attribute.current_hp
+        else:
+            return None
 
     @current_hp.setter
     def current_hp(self, value):
-        self._current_hp = value
+        if not self.attribute:
+            self.attribute = Attribute()
+        self.attribute.current_hp = value
 
     @hybrid_property
     def max_hp(self):
         if self.attribute:
-            return self.attribute.hp
+            return self.attribute.max_hp
         else:
             return None
 
@@ -49,7 +53,7 @@ class Character(Base):
     def max_hp(self, value):
         if not self.attribute:
             self.attribute = Attribute()
-        self.attribute.hp = value
+        self.attribute.max_hp = value
 
     @hybrid_property
     def strength(self):
@@ -78,10 +82,9 @@ class Character(Base):
         self.attribute.defense = value
 
     def __repr__(self):
-        return "<Character(level='%s', exp='%s', current_hp='%s' type='%s')>" % (
+        return "<Character(level='%s', exp='%s', type='%s')>" % (
             self.level,
             self.exp,
-            self._current_hp,
             self.type
         )
 
@@ -95,12 +98,6 @@ class PlayerItem(Base):
     amount = Column(Integer)
 
     item = relationship('Item', uselist=False)
-
-    @hybrid_property
-    def name(self):
-        if self.item:
-            return self.item.name
-        return None
 
 
 class Player(Character):
@@ -124,17 +121,17 @@ class Player(Character):
 
     @hybrid_property
     def current_hp(self):
-        if self._current_hp and self.max_hp:  # if max hp is not None
+        if self.attribute.current_hp and self.max_hp:  # if max hp is not None
 
-            if self._current_hp < self.max_hp:
+            if self.attribute.current_hp < self.max_hp:
 
                 regen = occurrence(self.hp_last_updated, HP_REGEN_INTERVAL) * HP_REGEN_AMOUNT
-                self._current_hp += regen
+                self.attribute.current_hp += regen
 
-                if self._current_hp > self.max_hp:  # if current hp exceeds the max hp
-                    self._current_hp = self.max_hp  # set the current hp value as max hp
+                if self.attribute.current_hp > self.max_hp:  # if current hp exceeds the max hp
+                    self.attribute.current_hp = self.max_hp  # set the current hp value as max hp
 
-        return self._current_hp
+        return self.attribute.current_hp
 
     @current_hp.setter
     def current_hp(self, value):
@@ -146,7 +143,7 @@ class Player(Character):
                 if value < self.max_hp:  # condition if the new value is is not full hp
                     self.hp_last_updated = datetime.now()
 
-        self._current_hp = value
+        self.attribute.current_hp = value
 
     def next_level_exp(self):
         base_exp = 200
@@ -192,32 +189,11 @@ class EquipmentSet(Base):
 
 class Entity(Character):
     name = Column(String(50))
-    base_id = Column(Integer, ForeignKey('attributes.id'))
-
-    base = relationship('Attribute', foreign_keys=[base_id], uselist=False)
 
     __mapper_args__ = {
         'polymorphic_identity': 'entity',
         'polymorphic_load': 'selectin'
     }
-
-    def set_level(self, value):
-        self.restore()
-        base_hp = self.base.hp
-        base_str = self.base.strength
-        base_def = self.base.defense
-        self.max_hp = floor(base_hp * (self.stat_growth ** value))
-        self.current_hp = self.max_hp
-        self.strength = floor(base_str * (self.stat_growth ** value))
-        self.defense = floor(base_def * (self.stat_growth ** value))
-
-        self.level = value
-
-    def restore(self):
-        self.max_hp = self.base.hp
-        self.current_hp = self.max_hp
-        self.strength = self.base.strength
-        self.defense = self.base.defense
 
 
 class Friendly(Entity):

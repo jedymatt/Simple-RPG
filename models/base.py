@@ -1,5 +1,5 @@
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, Float, String, Text, ForeignKey
+from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
 Base = declarative_base()
@@ -9,29 +9,53 @@ class Attribute(Base):
     __tablename__ = 'attributes'
 
     id = Column(Integer, primary_key=True)
-    hp = Column(Float, default=0)
+    current_hp = Column(Float, default=0)
+    max_hp = Column(Float, default=0)
     strength = Column(Float, default=0)
     defense = Column(Float, default=0)
 
+    @property
+    def attrs(self):
+        return ['max_hp', 'strength', 'defense']
+
     def __repr__(self):
-        return "<Attribute(hp='%s', strength='%s', defense='%s')>" % (self.hp, self.strength, self.defense)
+        return "<Attribute(current_hp='%s', max_hp='%s', strength='%s', defense='%s')>" % (
+            self.current_hp, self.max_hp, self.strength, self.defense
+        )
 
     def __add__(self, other):
-        self.hp += other.hp
-        self.strength += other.strength
-        self.defense += other.defense
+
+        if float(other.current_hp).is_integer():
+            self.current_hp += other.current_hp
+            if self.current_hp >= self.max_hp:
+                self.current_hp = self.max_hp
+        else:
+            self.current_hp += round(self.max_hp * other.current_hp)
+            if self.current_hp >= self.max_hp:
+                self.current_hp = self.max_hp
+
+        if float(other.max_hp).is_integer():
+            self.max_hp += other.max_hp
+        else:
+            self.max_hp += round(self.max_hp * other.max_hp)
+
+        if float(other.strength).is_integer():
+            self.strength += other.strength
+        else:
+            self.strength += round(self.strength * other.strength)
+
+        if float(other.defense).is_integer():
+            self.defense += other.defense
+        else:
+            self.defense += round(self.defense * other.defense)
         return self
 
     def __sub__(self, other):
-        self.hp -= other.hp
+        self.max_hp -= other.max_hp
         self.strength -= other.strength
         self.defense -= other.defense
 
         return self
-
-    @classmethod
-    def copy(cls, other):
-        return Attribute(hp=other.hp, strength=other.strength, defense=other.defense)
 
 
 class Location(Base):

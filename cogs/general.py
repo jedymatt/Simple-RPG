@@ -278,28 +278,6 @@ class Adventurer(commands.Cog):
     # async def daily(self, ctx):
     #     """Claim daily rewards, if already claimed show remaining time until next reward"""
 
-    @commands.command()
-    async def items(self, ctx):
-        """Show list of items"""
-        author_id = ctx.author.id
-
-        player = session.query(model.Player).filter(model.User.discord_id == author_id).one()
-
-        # string_items = '\n'.join([f"{char_item.amount} {char_item.item.name}" for char_item in player.items])
-
-        embed = discord.Embed(
-            title='Owned Items',
-            colour=discord.Colour.blurple()
-        )
-
-        for item in player.items:
-            embed.add_field(
-                name=item.name,
-                value="+%s" % item.amount
-            )
-
-        await ctx.send(embed=embed)
-
     #
     # @commands.command()
     # async def shop(self, ctx):

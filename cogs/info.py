@@ -40,7 +40,7 @@ class Info(commands.Cog):
             name='Stats',
             value="HP: {} / {}\n"
                   "Strength: {}\n"
-                  "Defense: {}".format(player.current_hp,
+                  "Defense: {}".format(int(player.current_hp),
                                        int(player.max_hp),
                                        int(player.strength),
                                        int(player.defense)),
