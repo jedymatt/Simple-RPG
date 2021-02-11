@@ -1,5 +1,5 @@
 import random
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 
 def time_left(last_updated: datetime, interval: float) -> timedelta:
@@ -30,7 +30,7 @@ def occurrence(last_updated: datetime, interval: float) -> int:
     if interval == 0:
         return 0
 
-    now = datetime.now()
+    now = datetime.now(tz=timezone.utc)
     elapsed = now - last_updated
     return int(elapsed.total_seconds() // interval)
 
