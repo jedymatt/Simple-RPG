@@ -253,14 +253,21 @@ class ItemCommand(commands.Cog, name='Manage Items'):
                 chosen = random.choice(attrs)
 
                 item_value = item_attribute.__getattribute__(chosen)
-                player_attr_value = player.attribute.__getattribute__(chosen)
+                player_attr_value = player.__getattribute__(chosen)
 
                 if float(item_value).is_integer():
-                    player.attribute.__setattr__(chosen, (item_value + player_attr_value))
+                    if chosen == 'max_hp':
+                        player.max_hp += item_value
+                    else:
+                        player.__setattr__(chosen, (item_value + player_attr_value))
                 else:
                     player.attribute.__setattr__(chosen, round((item_value * player_attr_value) + player_attr_value))
             else:
-                player.attribute += player_item.item.attribute
+                # TODO: Add conditional statement that filters percentage over integer
+                player.current_hp += player_item.item.attribute.current_hp
+                player.max_hp += player_item.item.attribute.max_hp
+                player.strength += player_item.item.attribute.strength
+                player.defense += player_item.item.attribute.defense
 
             player_item.amount -= 1
             amount -= 1

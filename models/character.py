@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from math import floor
 
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, func, Float
@@ -140,10 +140,18 @@ class Player(Character):
                 raise ValueError('Value exceeds the max_hp')
 
             if self.is_full_hp():  # condition first if value is full hp
-                if value < self.max_hp:  # condition if the new value is is not full hp
-                    self.hp_last_updated = datetime.now()
+                self.hp_last_updated = datetime.now(tz=timezone.utc)
 
         self.attribute.current_hp = value
+
+    @hybrid_property
+    def max_hp(self):
+        return self.attribute.max_hp
+
+    @max_hp.setter
+    def max_hp(self, value):
+        self.attribute.max_hp = value
+        self.hp_last_updated = datetime.now(tz=timezone.utc)
 
     def next_level_exp(self):
         base_exp = 200
