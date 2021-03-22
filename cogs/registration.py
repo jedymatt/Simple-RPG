@@ -6,7 +6,7 @@ from models import User, Player
 from models.config import BASE_HP, BASE_STRENGTH, BASE_DEFENSE
 
 
-# TODO: add task to commit every 5 minutes or so, check 'confirm' method
+# TODO: (least priority) add task to commit every 5 minutes or so, check 'confirm' method
 
 class Register(commands.Cog):
 

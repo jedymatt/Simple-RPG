@@ -16,6 +16,7 @@ Breaking changes from models on Attribute, commands using Attribute class is aff
 
 ## TODO: commands
 
+- battle simulator and battle commands
 - battle: None
 - Fight: None
 - duel: None

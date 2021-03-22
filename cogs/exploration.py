@@ -81,7 +81,7 @@ class Exploration(commands.Cog):
         for gather in gathered:
             # get player_item if none found then value is None
             player_item = next(
-                (player_item for player_item in player.items if player_item == gather[0]),
+                (player_item for player_item in player.items if player_item.item == gather[0]),
                 None
             )
 

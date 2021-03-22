@@ -29,6 +29,10 @@ class Character(Base):
         'polymorphic_on': type
     }
 
+    # TODO: Formulate taking damage
+    def take_damage(self, hit_points):
+        pass
+
     @hybrid_property
     def current_hp(self):
         if self.attribute:
