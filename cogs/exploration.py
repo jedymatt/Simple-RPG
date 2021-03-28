@@ -1,13 +1,15 @@
-import datetime
-import random
-
-import discord
-from discord.ext import commands
-from sqlalchemy.sql import func
-
-import models as model
+from datetime import datetime
 from db import session
+from discord import Colour
+from discord import Embed
+from discord.ext import commands
+from models import Location
+from models import Player
+from models import PlayerItem
+from models import User
 from models import util
+from random import randint
+from sqlalchemy.sql import func
 
 
 class Exploration(commands.Cog):
@@ -20,10 +22,10 @@ class Exploration(commands.Cog):
         """Go to the specific location"""
         author_id = ctx.author.id
 
-        location: model.Location = session.query(model.Location).filter(
-            func.lower(model.Location.name) == location.lower()).one()
+        location: Location = session.query(Location).filter(
+            func.lower(Location.name) == location.lower()).one()
 
-        player: model.Player = session.query(model.Player).filter(model.User.discord_id == author_id).one()
+        player: Player = session.query(Player).filter(User.discord_id == author_id).one()
 
         if player.level >= location.unlock_level:
             player.location = location
@@ -39,11 +41,11 @@ class Exploration(commands.Cog):
 
     @commands.command(aliases=['places'])
     async def locations(self, ctx):
-        locations = session.query(model.Location).all()
-        embed = discord.Embed(
+        locations = session.query(Location).all()
+        embed = Embed(
             title='Locations',
-            colour=discord.Colour.dark_green(),
-            timestamp=datetime.datetime.now()
+            colour=Colour.dark_green(),
+            timestamp=datetime.now()
         )
 
         for location in locations:
@@ -59,10 +61,10 @@ class Exploration(commands.Cog):
     async def gather(self, ctx):
         """Gather raw materials, sometimes failed, sometimes encounter mobs"""
         author_id = ctx.author.id
-        player: model.Player = session.query(model.Player).filter(model.User.discord_id == author_id).one()
+        player: Player = session.query(Player).filter(User.discord_id == author_id).one()
 
         gathered = []
-        location: model.Location = player.location
+        location: Location = player.location
         for raw_material in location.raw_materials:
 
             success = util.random_boolean(raw_material.drop_chance)
@@ -70,12 +72,12 @@ class Exploration(commands.Cog):
             if success:
                 drop_min = raw_material.drop_amount_min
                 drop_max = raw_material.drop_amount_max
-                gathered.append((raw_material.raw_material, random.randint(drop_min, drop_max)))
+                gathered.append((raw_material.raw_material, randint(drop_min, drop_max)))
 
         # declare embed
-        embed = discord.Embed(
+        embed = Embed(
             title='Gathered',
-            colour=discord.Colour.green()
+            colour=Colour.green()
         )
 
         for gather in gathered:
@@ -91,7 +93,7 @@ class Exploration(commands.Cog):
             else:
                 # if none, create obj and append it to the Player.items
                 player.items.append(
-                    model.PlayerItem(
+                    PlayerItem(
                         item=gather[0],
                         amount=gather[1]
                     )
@@ -103,6 +105,7 @@ class Exploration(commands.Cog):
                 value="+%s" % gather[1]
             )
 
+        # send output
         await ctx.send(str(gathered))
 
     @gather.error

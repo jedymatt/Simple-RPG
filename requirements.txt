@@ -1,5 +1,8 @@
-discord.py==1.6.0
-SQLAlchemy==1.3.23
-psycopg2==2.8.6
-# For Linux
-# psycopg2-binary==2.8.6
+discord.py
+SQLAlchemy
+psycopg2
+mysqlclient
+# discord.py==1.6.0
+# SQLAlchemy==1.4.3
+# psycopg2==2.8.6
+# mysqlclient==2.0.3
