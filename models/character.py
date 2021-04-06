@@ -5,9 +5,9 @@ from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, func, Floa
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 
-from models.base import Attribute, Base
-from models.config import HP_REGEN_AMOUNT, HP_REGEN_INTERVAL, BASE_DEFENSE, BASE_STRENGTH
-from models.util import occurrence
+from .base import Attribute, Base
+from .config import HP_REGEN_AMOUNT, HP_REGEN_INTERVAL, BASE_DEFENSE, BASE_STRENGTH
+from .util import occurrence
 
 
 class Character(Base):
@@ -108,12 +108,10 @@ class Player(Character):
     user_id = Column(Integer, ForeignKey('users.id'))
     money = Column(Integer, default=0)
     hp_last_updated = Column(DateTime(timezone=True), default=func.now())
-    companion_id = Column(Integer, ForeignKey('characters.id'))
 
     user = relationship('User', back_populates='player', uselist=False)
     items: list = relationship('PlayerItem')
     equipment_set = relationship('EquipmentSet', uselist=False)
-    companion = relationship('Friendly', foreign_keys=[companion_id], uselist=False)
 
     __mapper_args__ = {
         'polymorphic_identity': 'player',
