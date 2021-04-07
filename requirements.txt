@@ -3,11 +3,5 @@ SQLAlchemy
 psycopg2
 mysqlclient
 
-# Latest versions
-# discord.py==1.6.0
-# SQLAlchemy==1.4.3
-# psycopg2==2.8.6
-# mysqlclient==2.0.3
-
 # Dev tools
-# python-dotenv
+python-dotenv

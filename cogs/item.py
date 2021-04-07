@@ -195,12 +195,12 @@ class ItemCommand(commands.Cog, name='Manage Items'):
         )
 
         embed.add_field(name='Weapon',
-                        value=player.equipment_set.weapon.name if player.equipment_set and player.equipment_set.weapon \
-                            else "None")
+                        value=player.equipment_set.weapon.name if player.equipment_set and player.equipment_set.weapon
+                        else "None")
 
         embed.add_field(name='Shield',
-                        value=player.equipment_set.shield.name if player.equipment_set and player.equipment_set.shield \
-                            else "None")
+                        value=player.equipment_set.shield.name if player.equipment_set and player.equipment_set.shield
+                        else "None")
 
         await ctx.send(embed=embed)
 

@@ -1,7 +1,7 @@
 from config import BOT_TOKEN
-from db import engine, session
+from db import engine
 import os
-import discord
+
 from discord.ext import commands
 
 
