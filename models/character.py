@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from math import floor
+from math import floor, ceil
 
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, func, Float
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -29,9 +29,12 @@ class Character(Base):
         'polymorphic_on': type
     }
 
-    # TODO: Formulate taking damage
-    def take_damage(self, hit_points):
-        pass
+    def take_damage(self, opponent_strength):
+        # damage = (attacker's strength ^ 2) / (attacker's strength + target defense)
+
+        damage_taken = ceil((opponent_strength ** 2) / (opponent_strength + self.defense))
+        self.current_hp -= damage_taken
+        return damage_taken
 
     @hybrid_property
     def current_hp(self):

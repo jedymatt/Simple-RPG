@@ -21,6 +21,7 @@ Breaking changes from models on Attribute, commands using Attribute class is aff
 - Fight: None
 - duel: None
 
+
 ## Untested commands
 
 - sell \[item\] \[amount\]: sells any items owned by the player, gains 80% of the market value
@@ -28,6 +29,7 @@ Breaking changes from models on Attribute, commands using Attribute class is aff
 - equipments: shows list of equipments owned
 - equipped: show equipped set
 - use \[item\] \[amount\]: uses item
+- spar: practice match a player, no exp earned on both sides
 
 ## Tentative plans
 
