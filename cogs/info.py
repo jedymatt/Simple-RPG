@@ -14,7 +14,7 @@ class Info(commands.Cog):
         """Show profile"""
         user_id = ctx.author.id
 
-        player = session.query(Player).filter(User.discord_id == user_id).one()
+        player = session.query(Player).join(User).filter(User.discord_id == user_id).one()
 
         # Embedded format
         embed = discord.Embed(

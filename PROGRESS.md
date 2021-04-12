@@ -16,11 +16,11 @@ Breaking changes from models on Attribute, commands using Attribute class is aff
 
 ## TODO: commands
 
-- battle simulator and battle commands
 - battle: None
+- explore: None
 - Fight: None
 - duel: None
-
+- deathmatch: fight until no hp left, huge exp rewards that scaled with its damage inflicted and the remaining hp
 
 ## Untested commands
 

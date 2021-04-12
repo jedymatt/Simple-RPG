@@ -1,3 +1,4 @@
+import random
 from datetime import datetime, timezone
 from math import floor, ceil
 
@@ -6,8 +7,14 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 
 from .base import Attribute, Base
-from .config import HP_REGEN_AMOUNT, HP_REGEN_INTERVAL, BASE_DEFENSE, BASE_STRENGTH
 from .util import occurrence
+from .util import random_boolean
+
+BASE_HP = 50
+BASE_STRENGTH = 15
+BASE_DEFENSE = 5
+HP_REGEN_AMOUNT = 10
+HP_REGEN_INTERVAL = 600  # 10 MINUTES
 
 
 class Character(Base):
@@ -30,10 +37,31 @@ class Character(Base):
     }
 
     def take_damage(self, opponent_strength):
-        # damage = (attacker's strength ^ 2) / (attacker's strength + target defense)
+        """
+        Take damage, with 20% chance to deal additional 20% to 40% damage
 
-        damage_taken = ceil((opponent_strength ** 2) / (opponent_strength + self.defense))
+        :rtype: int
+        :param opponent_strength: Character.strength or Attribute.strength
+        :return: damage taken
+        """
+        # damage = (attacker's strength ^ 2) / (attacker's strength + target defense)
+        critical_rate = 0.20  # 20%
+        critical_damage_min = 1.25  # 25% damage
+        critical_damage_max = 1.40  # 40% damage
+
+        # if critical hit occurs
+        if random_boolean(critical_rate):
+            critical_damage = round(random.uniform(critical_damage_min, critical_damage_max), 2)
+
+            damage_taken = ceil(((opponent_strength ** 2) / (opponent_strength + self.defense)) * critical_damage)
+        else:
+            damage_taken = ceil((opponent_strength ** 2) / (opponent_strength + self.defense))
+
         self.current_hp -= damage_taken
+
+        if self.current_hp < 0:
+            self.current_hp = 0
+
         return damage_taken
 
     @hybrid_property
@@ -110,7 +138,7 @@ class PlayerItem(Base):
 class Player(Character):
     user_id = Column(Integer, ForeignKey('users.id'))
     money = Column(Integer, default=0)
-    hp_last_updated = Column(DateTime(timezone=True), default=func.now())
+    hp_last_updated = Column(DateTime(timezone=True), default=func.utcnow())
 
     user = relationship('User', back_populates='player', uselist=False)
     items: list = relationship('PlayerItem')
@@ -145,7 +173,7 @@ class Player(Character):
                 raise ValueError('Value exceeds the max_hp')
 
             if self.is_full_hp():  # condition first if value is full hp
-                self.hp_last_updated = datetime.now(tz=timezone.utc)
+                self.hp_last_updated = datetime.now(timezone.utc)
 
         self.attribute.current_hp = value
 
@@ -156,7 +184,7 @@ class Player(Character):
     @max_hp.setter
     def max_hp(self, value):
         self.attribute.max_hp = value
-        self.hp_last_updated = datetime.now(tz=timezone.utc)
+        self.hp_last_updated = datetime.now(timezone.utc)
 
     def next_level_exp(self):
         base_exp = 200
@@ -175,6 +203,7 @@ class Player(Character):
 
         self.level += 1
 
+    # FIXME: fix level up only once
     def add_exp(self, value):
         if value < 0:
             raise ValueError('value is lesser or equal zero')
@@ -183,6 +212,16 @@ class Player(Character):
         if self.exp >= self.next_level_exp():
             self.exp -= self.next_level_exp()
             self.level_up()
+
+    def reduce_exp(self, value):
+        if value < 0:
+            raise ValueError('Cannot reduce from a negative value')
+
+        self.exp -= value
+        if self.exp < 0:
+            self.level -= 1
+            self.exp = (self.next_level_exp() + self.exp)
+            # TODO: reduce base stats
 
 
 class EquipmentSet(Base):

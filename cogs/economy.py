@@ -1,10 +1,10 @@
 import discord
 from discord.ext import commands
+from sqlalchemy.sql import func
 
 import models as model
 from cogs.utils import stripper
 from db import session
-from sqlalchemy.sql import func
 
 
 class Economy(commands.Cog):

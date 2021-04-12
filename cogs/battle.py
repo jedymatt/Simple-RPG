@@ -1,8 +1,7 @@
-from db import session
-
 import discord
 from discord.ext import commands
 
+from db import session
 from models import Player
 from models import User
 
@@ -20,8 +19,8 @@ class Battle(commands.Cog):
 
         """
 
-        player: Player = session.query(Player).filter(User.discord_id == ctx.author.id).one()
-        opponent: Player = session.query(Player).filter(User.discord_id == challenged.id).one()
+        player: Player = session.query(Player).join(User).filter(User.discord_id == ctx.author.id).one()
+        opponent: Player = session.query(Player).join(User).filter(User.discord_id == challenged.id).one()
 
         player_dmg = opponent.take_damage(player.strength)
         opponent_dmg = player.take_damage(opponent.strength)
@@ -34,8 +33,8 @@ class Battle(commands.Cog):
             await ctx.send('It is a draw!')
         else:
             await ctx.send(
-                f'{ctx.author}: {player_dmg} pts'
-                f'{challenged}: {opponent_dmg} pts'
+                f'{ctx.author}: {player_dmg} pts\n'
+                f'{challenged}: {opponent_dmg} pts\n'
                 f'The winner is {ctx.author if player_dmg > opponent_dmg else challenged}'
             )
 

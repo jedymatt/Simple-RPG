@@ -3,7 +3,7 @@ from discord.ext import commands
 from cogs.utils import rng
 from db import session
 from models import User, Player
-from models.config import BASE_HP, BASE_STRENGTH, BASE_DEFENSE
+from models import character
 
 
 # TODO: (least priority) add task to commit every 5 minutes or so, check 'confirm' method
@@ -51,10 +51,10 @@ class Register(commands.Cog):
         user = self.users[ctx.author.id]
         player = Player(level=1, exp=0, money=500, stat_growth=1.5)
         player.attribute = rng.random_attribute(user.dice_roll)
-        player.attribute.current_hp += BASE_HP
-        player.attribute.max_hp += BASE_HP
-        player.attribute.strength += BASE_STRENGTH
-        player.attribute.defense += BASE_DEFENSE
+        player.attribute.current_hp += character.BASE_HP
+        player.attribute.max_hp += character.BASE_HP
+        player.attribute.strength += character.BASE_STRENGTH
+        player.attribute.defense += character.BASE_DEFENSE
         user.player = player
 
         session.commit()

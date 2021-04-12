@@ -1,15 +1,18 @@
 from datetime import datetime
-from db import session
+from random import randint
+
 from discord import Colour
 from discord import Embed
 from discord.ext import commands
+from sqlalchemy.sql import func
+
+from db import session
+from models import Hostile
 from models import Location
 from models import Player
 from models import PlayerItem
 from models import User
 from models import util
-from random import randint
-from sqlalchemy.sql import func
 
 
 class Exploration(commands.Cog):
@@ -39,7 +42,7 @@ class Exploration(commands.Cog):
         """Explore the location"""
         pass
 
-    @commands.command(aliases=['places'])
+    @commands.command(aliases=['places', 'areas'])
     async def locations(self, ctx):
         locations = session.query(Location).all()
         embed = Embed(
@@ -104,6 +107,26 @@ class Exploration(commands.Cog):
                 name=gather[0].name,
                 value="+%s" % gather[1]
             )
+
+        # if player has not gained anything, a monster appears
+        if gathered is None:
+            await ctx.send("A monster appeared! You are forced to fight.")
+            # generate monster depending on the place
+            monster = session.query(Hostile).filter(Hostile.location.name == player.location).one()
+
+            player_dmg = monster.take_damage(player.strength)
+            monster_dmg = player.take_damage(monster.strength)
+
+            if player_dmg > monster_dmg:
+                exp_gained = 25  # this value is not final
+                await ctx.send(f'You defeated the monster. You gained {exp_gained}xp')
+                player.add_exp(exp_gained)
+            elif player_dmg > monster_dmg:
+                exp_lost = 5  # # this value is not final
+                await ctx.send(f'You are defeated. You lost {exp_lost}exp')
+                player.reduce_exp(exp_lost)
+            else:
+                await ctx.send('The monster ran away.')
 
         # send output
         await ctx.send(str(gathered))

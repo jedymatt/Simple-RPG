@@ -1,7 +1,5 @@
-import discord
 from discord.ext import commands
 
-import models as model
 from db import session
 
 

@@ -1,8 +1,8 @@
-from models.base import Base
 from sqlalchemy import Column, Integer, BigInteger, DateTime
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from sqlalchemy.schema import FetchedValue
+
+from models.base import Base
 
 
 class User(Base):

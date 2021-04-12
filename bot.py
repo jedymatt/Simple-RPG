@@ -1,8 +1,9 @@
-from config import BOT_TOKEN
-from db import engine
 import os
 
 from discord.ext import commands
+
+from config import BOT_TOKEN
+from db import engine
 
 
 def main():

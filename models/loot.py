@@ -1,6 +1,7 @@
-from models.base import Base
 from sqlalchemy import Column, Integer, ForeignKey, Float
 from sqlalchemy.orm import relationship
+
+from models.base import Base
 
 
 class Loot(Base):

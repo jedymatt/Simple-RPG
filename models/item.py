@@ -1,9 +1,9 @@
-from models.base import Base
-from sqlalchemy import Column, Integer, String, Interval, Text, ForeignKey, Boolean
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, Boolean
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.ext.hybrid import hybrid_property
-from datetime import timedelta
+from sqlalchemy.orm import relationship
+
+from models.base import Base
 
 
 class Item(Base):
