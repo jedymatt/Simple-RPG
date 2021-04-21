@@ -28,7 +28,7 @@ class Exploration(commands.Cog):
         location: Location = session.query(Location).filter(
             func.lower(Location.name) == location.lower()).one()
 
-        player: Player = session.query(Player).filter(User.discord_id == author_id).one()
+        player: Player = session.query(Player).join(User).filter(User.discord_id == author_id).one()
 
         if player.level >= location.unlock_level:
             player.location = location
@@ -137,6 +137,10 @@ class Exploration(commands.Cog):
             await ctx.send(error.args)
         else:
             raise error
+
+    @commands.command()
+    async def hunt(self, ctx):
+        pass
 
 
 def setup(bot: commands.Bot):

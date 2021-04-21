@@ -18,6 +18,7 @@ Breaking changes from models on Attribute, commands using Attribute class is aff
 
 - battle: None
 - explore: None
+- hunt: Hunt monsters in the area
 - Fight: None
 - duel: None
 - deathmatch: fight until no hp left, huge exp rewards that scaled with its damage inflicted and the remaining hp
@@ -37,3 +38,4 @@ Breaking changes from models on Attribute, commands using Attribute class is aff
 - raid: fights the weekly boss
 - dailies: claim daily rewards
 - pets
+- add crit rate and crit damage
